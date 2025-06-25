@@ -160,9 +160,79 @@ SC_fnc_parachuteJump = {
 
 SC_fnc_isConfigEntryValid = {
     (SC_var_lxws_active || {((toLower (_x select 0)) select [(count (_x select 0)) - 5, 5]) != "_lxws"}) &&
-    {SC_var_rf_active || {((toLower (_x select 0)) select [(count (_x select 0)) - 3, 3]) != "_rf"}}
+    {SC_var_rf_active || {((toLower (_x select 0)) select [(count (_x select 0)) - 3, 3]) != "_rf"}} &&
+    {SC_var_ef_active || {((toLower (_x select 0)) select [0, 3]) != "ef_"}}
 };
 
 SC_fnc_filterConfigArr = {
     _this select {_x call SC_fnc_isConfigEntryValid}
+};
+
+SC_fnc_addHandleHeal = {
+    params ["_unit"];
+
+    _id = _unit getVariable ["SC_var_handleHealEhId", -1];
+    if (_id != -1) then {_unit removeEventHandler ["HandleHeal", _id];};
+    _id = _unit addEventHandler ["HandleHeal", {_this spawn SC_fnc_onHeal; false}];
+    _unit setVariable ["SC_var_handleHealEhId", _id];
+};
+
+SC_fnc_onHeal = {
+    params ["_injured", "_healer"];
+
+    if (((isPlayer _injured) || (isPlayer _healer)) && !(_injured getVariable ["SC_var_isBeingHealed", false])) then {
+        _damage = damage _injured;
+        _injured setVariable ["SC_var_isBeingHealed", true];
+
+        waitUntil {(damage _injured) != _damage};
+
+        if ((damage _injured) < _damage) then {
+            _injured setVariable ["SC_var_isBeingHealed", false];
+
+            if (_healer isEqualTo _injured) then {
+                remoteExecCall ["SC_fnc_addSelfHeal", _injured];
+            } else {
+                if (isPlayer _healer) then {
+                    remoteExecCall ["SC_fnc_addHeal", _healer];
+                };
+            };
+        };
+    };
+};
+
+SC_fnc_secondsToMinSec = {
+    params ["_time"];
+
+    _mins = floor (_time / 60);
+    _secs = _time - (_mins * 60);
+    _str = format ["%1:%2", _mins, _secs];
+    _pos = _str find ":";
+    _length = count _str;
+
+    _ret = if ((_length - _pos) == 2) then {
+        [(_str select [0, _pos + 1]), (_str select [(_pos + 1), (_length - _pos)])] joinString "0"
+    } else {
+        _str
+    };
+
+    if ((count _ret) == 4) then {
+        _ret = "0" + _ret;
+    };
+
+    _ret
+};
+
+SC_fnc_handleVehicleDamage = {
+    params ["_unit", "", "_newDamage", "", "_projectile", "_hitPartIndex", "", "", "_directHit"];
+
+    if ((_directHit && {_projectile == ""}) || {SC_var_launcherAmmos getOrDefault [_projectile, false]}) then {
+        _oldDamage = _unit getHitIndex _hitPartIndex;
+        _oldDamage + ((_newDamage - _oldDamage) * SC_var_vehicleDamageFactor)
+    }
+};
+
+SC_fnc_addHandleDamageToVehicle = {
+    params ["_vehicle"];
+
+    _vehicle addEventHandler ["HandleDamage", {if (local (_this select 0)) then {_this call SC_fnc_handleVehicleDamage}}];
 };

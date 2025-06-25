@@ -14,7 +14,7 @@ SC_fnc_playZoneAndVehicleCooldownLoop = {
                         _vehicleActionCoolDown = _unit getVariable "SC_var_vehicleActionCooldown";
 
                         if (!(isNil "_vehicleCoolDown") && {_vehicleCoolDown > 0}) then {
-                            _unit setVariable ["SC_var_vehicleCooldown", (_vehicleCoolDown - 1)];
+                            _unit setVariable ["SC_var_vehicleCooldown", (_vehicleCoolDown - 1), true];
                         };
 
                         if (!(isNil "_vehicleActionCoolDown") &&  {_vehicleActionCoolDown > 0}) then {
@@ -167,6 +167,8 @@ SC_fnc_gameModeLoop = {
                                             _sectorInd,
                                             _xp
                                         ]] remoteExecCall ["KF_fnc_AddMidFeedLine", _x];
+
+                                        remoteExecCall ["SC_fnc_addCapturedSector", _x];
                                     };
                                 } forEach _sidesUnitsOnSector;
 

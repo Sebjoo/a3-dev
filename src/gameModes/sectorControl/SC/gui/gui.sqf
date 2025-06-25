@@ -96,37 +96,61 @@ SC_fnc_setupSettingsDialog = {
     (_settingsDialog displayCtrl 1901) sliderSetPosition (profileNameSpace getVariable ["SC_var_currentGrassViewDistanceFactor", 1]);
 };
 
-SC_fnc_getLoadoutName = {
-    params ["_loadout", "_perks"];
-
-    (
-        (
-            (
-                [
-                    ((_loadout select 0) select 0),
-                    ((_loadout select 1) select 0)
-                ] select {_x != ""}
-            ) apply {[_x] call SC_fnc_getDisplayName}
-        ) joinString " & "
-    ) +
-    " [" + ((_perks select {_x != ""}) joinString ", ") + "]"
-};
-
 SC_fnc_setupLoadoutDialog = {
     _loadoutDialog = uiNamespace getVariable "SC_var_loadoutDialog";
-    _combo = _loadoutDialog displayCtrl 2100;
+    _controlsTable = _loadoutDialog displayCtrl 1500;
+    (ctAddHeader _controlsTable) params ["", "_header"];
+
+    _header params ["_ctrlHeaderBackground",
+        "_ctrlColumn1", "_ctrlColumn2", "_ctrlColumn3",
+        "_ctrlColumn4", "_ctrlColumn5"
+    ];
+
+    {_x ctrlSetBackgroundColor [0.4, 0.4, 0.4, 1];} forEach _row;
+
+    _ctrlHeaderBackground ctrlSetBackgroundColor [0, 0.3, 0.6, 1];
+    _ctrlColumn1 ctrlSetText "Weapon";
+    _ctrlColumn2 ctrlSetText "Launcher";
+    _ctrlColumn3 ctrlSetText "Sidearm";
+    _ctrlColumn4 ctrlSetText "Apparel";
+    _ctrlColumn5 ctrlSetText "Perks";
+
+    _loadouts = (profileNameSpace getVariable ["SC_var_storedLoadouts", []]) select {(_x select 3) == SC_var_currentWorldGroup};
+    _loadouts pushBack [[[],[],[],[],[],[],"","",[],["","","","","",""]], [], SC_var_baseLoadoutInfo, SC_var_currentWorldGroup];
     
     {
-        _x params ["", "", "", ["_worldGroup", "2035"]];
+        _x params ["_loadout", "_perks"];
+        _loadout params ["_primaryArr", "_launcherArr", "_sidearmArr", "_uniformArr", "_vestArr", "_backpackArr", "_helmet"];
 
-        if (_worldGroup == SC_var_currentWorldGroup) then {
-            _combo lbAdd (_x call SC_fnc_getLoadoutName);
-        };
-    } forEach (profileNameSpace getVariable ["SC_var_storedLoadouts", []]);
+        _primaryWeapon = if (_primaryArr isEqualTo []) then {""} else {_primaryArr select 0};
+        _launcher = if (_launcherArr isEqualTo []) then {""} else {_launcherArr select 0};
+        _sidearm = if (_sidearmArr isEqualTo []) then {""} else {_sidearmArr select 0};
+        _uniform = if (_uniformArr isEqualTo []) then {""} else {_uniformArr select 0};
+        _vest = if (_vestArr isEqualTo []) then {""} else {_vestArr select 0};
+        _backpack = if (_backpackArr isEqualTo []) then {""} else {_backpackArr select 0};
+        _helmet = if (_helmet isEqualTo "") then {""} else {_helmet};
 
-    _combo lbAdd "New Loadout";
-    _numLoadouts = (lbSize _combo) - 1;
-    _combo lbSetCurSel _numLoadouts;
+        (ctAddRow _controlsTable) params ["", "_row"];
+
+        _row params ["_ctrlBackground",
+            "_ctrlColumn1", "_ctrlColumn2", "_ctrlColumn3",
+            "_ctrlColumn4", "_ctrlColumn5", "_ctrlColumn6",
+            "_ctrlColumn7", "_ctrlColumn8"
+        ];
+
+        {_x ctrlSetBackgroundColor [0.4, 0.4, 0.4, 1];} forEach _row;
+
+        _ctrlColumn8 ctrlSetBackgroundColor [0, 0, 0, 0];
+
+        _ctrlColumn1 ctrlSetText ([_primaryWeapon] call SC_fnc_getPicture);
+        _ctrlColumn2 ctrlSetText ([_launcher] call SC_fnc_getPicture);
+        _ctrlColumn3 ctrlSetText ([_sidearm] call SC_fnc_getPicture);
+        _ctrlColumn4 ctrlSetText ([_uniform] call SC_fnc_getPicture);
+        _ctrlColumn5 ctrlSetText ([_vest] call SC_fnc_getPicture);
+        _ctrlColumn6 ctrlSetText ([_backpack] call SC_fnc_getPicture);
+        _ctrlColumn7 ctrlSetText ([_helmet] call SC_fnc_getPicture);
+        _ctrlColumn8 ctrlSetText (_perks joinString ", ");
+    } forEach _loadouts;
 };
 
 SC_fnc_storeLoadout = {
@@ -135,9 +159,9 @@ SC_fnc_storeLoadout = {
     };
 
     _loadoutDialog = uiNamespace getVariable "SC_var_loadoutDialog";
-    _combo = _loadoutDialog displayCtrl 2100;
-    _numLoadouts = (lbSize _combo) - 1;
-    _idxToStore = lbCurSel _combo;
+    _controlsTable = _loadoutDialog displayCtrl 1500;
+    _numLoadouts = (ctRowCount _controlsTable) - 1;
+    _idxToStore = ctCurSel _controlsTable;
     _newLoadout = [(getUnitLoadout player), +SC_var_perks, (call SC_fnc_getLoadoutInfo), SC_var_currentWorldGroup];
     _newLoadouts = profileNameSpace getVariable ["SC_var_storedLoadouts", []];
 
@@ -146,21 +170,19 @@ SC_fnc_storeLoadout = {
     } else {
         _newLoadouts set [_idxToStore, _newLoadout];
     };
-    
-    _combo lbsetText [_idxToStore, (_newLoadout call SC_fnc_getLoadoutName)];
+
     profileNameSpace setVariable ["SC_var_storedLoadouts", _newLoadouts];
     saveProfileNameSpace;
 
-    if (_idxToStore == _numLoadouts) then {
-        _combo lbAdd "New Loadout";
-    };
+    closeDialog 2;
+    createDialog "loadoutDialog";
 };
 
 SC_fnc_loadLoadout = {
     _loadoutDialog = uiNamespace getVariable "SC_var_loadoutDialog";
-    _combo = _loadoutDialog displayCtrl 2100;
-    _numLoadouts = (lbSize _combo) - 1;
-    _idxToLoad = lbCurSel _combo;
+    _controlsTable = _loadoutDialog displayCtrl 1500;
+    _numLoadouts = (ctRowCount _controlsTable) - 1;
+    _idxToLoad = ctCurSel _controlsTable;
 
     if (_idxToLoad == _numLoadouts) then {
         SC_var_lastLoadout = +SC_var_baseLoadout;
@@ -186,7 +208,7 @@ SC_fnc_loadLoadout = {
 
 SC_fnc_deleteLoadout = {
     _loadoutDialog = uiNamespace getVariable "SC_var_loadoutDialog";
-    _combo = _loadoutDialog displayCtrl 2100;
+    _controlsTable = _loadoutDialog displayCtrl 1500;
     
     _allLoadouts = profileNameSpace getVariable ["SC_var_storedLoadouts", []];
     _worldGroupsLoadouts = _allLoadouts select {
@@ -196,16 +218,15 @@ SC_fnc_deleteLoadout = {
     };
     _otherLoadouts = _allLoadouts - _worldGroupsLoadouts;
 
-    _numLoadouts = (lbSize _combo) - 1;
-    _idxToDelete = lbCurSel _combo;
+    _numLoadouts = (ctRowCount _controlsTable) - 1;
+    _idxToDelete = ctCurSel _controlsTable;
     if ((_numLoadouts == 0) || {_idxToDelete == _numLoadouts}) exitWith {};
     _worldGroupsLoadouts deleteAt _idxToDelete;
     _allLoadouts = _otherLoadouts + _worldGroupsLoadouts;
     profileNameSpace setVariable ["SC_var_storedLoadouts", +_allLoadouts];
     saveProfileNameSpace;
 
-    _combo lbDelete _idxToDelete;
-    _combo lbSetCurSel (_numLoadouts - 1);
+    _controlsTable ctRemoveRows [_idxToDelete];
 };
 
 SC_fnc_getPerkFromPerkAbbrev = {
@@ -283,5 +304,262 @@ SC_fnc_changePerk = {
         SC_var_perks set [_perkSlot, _newPerkAbbrev];
         [SC_var_equip, playerSide, (player getVariable "SC_var_rank"), +SC_var_perks, _removedEquipment] call SC_fnc_changePerks;
         call SC_fnc_setupPerkDialog;
+    };
+};
+
+SC_fnc_showStatistics = {
+    params ["_showDeaths", "_sortByIndex"];
+
+    _settingsDialog = uiNamespace getVariable "SC_var_statisticsDialog";
+
+    _numKills = profileNamespace getVariable ["SC_var_numKills", 0];
+    _numDeaths = profileNamespace getVariable ["SC_var_numDeaths", 0];
+    _numOther = profileNamespace getVariable ["SC_var_numOther", 0];
+    _headshotRate = profileNamespace getVariable ["SC_var_headshotRate", 0];
+    _numCapturedSectors = profileNamespace getVariable ["SC_var_numCapturedSectors", 0];
+    _numUnitsRevived = profileNamespace getVariable ["SC_var_numRevives", 0];
+    _numRevived = profileNamespace getVariable ["SC_var_numRevived", 0];
+    _numHeals = profileNamespace getVariable ["SC_var_numHeals", 0];
+    _numSelfHeals = profileNamespace getVariable ["SC_var_numSelfHeals", 0];
+
+    (_settingsDialog displayCtrl 1003) ctrlSetText ("Kills: " + (str _numKills));
+    (_settingsDialog displayCtrl 1004) ctrlSetText ("Deaths: " + (str _numDeaths));
+    (_settingsDialog displayCtrl 1005) ctrlSetText ("Assists/Finally Killed: " + (str _numOther));
+    (_settingsDialog displayCtrl 1006) ctrlSetText ("Headshot Rate: " + ((str ([100 * _headshotRate, 2] call BIS_fnc_cutDecimals)) + "%"));
+    (_settingsDialog displayCtrl 1007) ctrlSetText ("Sectors Captured: " + (str _numCapturedSectors));
+    (_settingsDialog displayCtrl 1008) ctrlSetText ("K/D: " + (str ([_numKills / (1 max _numDeaths), 2] call BIS_fnc_cutDecimals)));
+    (_settingsDialog displayCtrl 1009) ctrlSetText ("Units Revived: " + (str _numUnitsRevived));
+    (_settingsDialog displayCtrl 1010) ctrlSetText ("Recieved Revives: " + (str _numRevived));
+    (_settingsDialog displayCtrl 1011) ctrlSetText ("Units Healed: " + (str _numHeals));
+    (_settingsDialog displayCtrl 1012) ctrlSetText ("Healed Self: " + (str _numSelfHeals));
+
+    _controlsTable = _settingsDialog displayCtrl 1500;
+    ctClear _controlsTable;
+    (ctAddHeader _controlsTable) params ["", "_header"];
+
+    _header params ["_ctrlHeaderBackground",
+        "_ctrlHeaderColumn1", "_ctrlHeaderColumn2", "_ctrlHeaderColumn3",
+        "_ctrlHeaderColumn4", "_ctrlHeaderColumn5", "_ctrlHeaderColumn6"
+    ];
+
+    _ctrlHeaderBackground ctrlSetBackgroundColor [0, 0.3, 0.6, 1];
+    _ctrlHeaderColumn1 ctrlSetText "Picture";
+    _ctrlHeaderColumn2 ctrlSetText (["Kills", "Deaths"] select _showDeaths);
+    _ctrlHeaderColumn3 ctrlSetText "Assists";
+    _ctrlHeaderColumn4 ctrlSetText "Headshots";
+    _ctrlHeaderColumn5 ctrlSetText "Avg. Distance";
+    _ctrlHeaderColumn6 ctrlSetText (["XP", ""] select _showDeaths);
+
+    if _showDeaths then {
+        _ctrlHeaderColumn2 ctrlAddEventHandler ["ButtonClick", {[true, 1] call SC_fnc_showStatistics;}];
+        _ctrlHeaderColumn3 ctrlAddEventHandler ["ButtonClick", {[true, 2] call SC_fnc_showStatistics;}];
+        _ctrlHeaderColumn4 ctrlAddEventHandler ["ButtonClick", {[true, 3] call SC_fnc_showStatistics;}];
+        _ctrlHeaderColumn5 ctrlAddEventHandler ["ButtonClick", {[true, 4] call SC_fnc_showStatistics;}];
+        _ctrlHeaderColumn6 ctrlAddEventHandler ["ButtonClick", {[true, 5] call SC_fnc_showStatistics;}];
+    } else {
+        _ctrlHeaderColumn2 ctrlAddEventHandler ["ButtonClick", {[false, 1] call SC_fnc_showStatistics;}];
+        _ctrlHeaderColumn3 ctrlAddEventHandler ["ButtonClick", {[false, 2] call SC_fnc_showStatistics;}];
+        _ctrlHeaderColumn4 ctrlAddEventHandler ["ButtonClick", {[false, 3] call SC_fnc_showStatistics;}];
+        _ctrlHeaderColumn5 ctrlAddEventHandler ["ButtonClick", {[false, 4] call SC_fnc_showStatistics;}];
+        _ctrlHeaderColumn6 ctrlAddEventHandler ["ButtonClick", {[false, 5] call SC_fnc_showStatistics;}];
+    };
+
+    _history = profileNameSpace getVariable [["SC_var_killHistory", "SC_var_deathHistory"] select _showDeaths, []];
+
+    _history = [_history, [_sortByIndex], {
+        if (_input0 != 3) then {
+            _x select _input0
+        } else {
+            _x params ["", "_numKills", "_numOther", "_numHeadshots"];
+            _numHeadshots / (_numKills + _numOther)
+        }
+    }, "DESCEND"] call BIS_fnc_sortBy;
+
+    {
+        _x params ["_source", "_numKills", "_numOther", "_numHeadshots", "_avgDis", ["_xp", 0]];
+        _picture = [_source] call SC_fnc_getPicture;
+
+        if (_picture != "") then {
+            (ctAddRow _controlsTable) params ["", "_row"];
+
+            _row params ["_ctrlBackground",
+                "_ctrlColumn1", "_ctrlColumn2", "_ctrlColumn3",
+                "_ctrlColumn4", "_ctrlColumn5", "_ctrlColumn6"
+            ];
+
+            if (_avgDis < 0) then {
+                _avgDis = 0;
+            };
+
+            {_x ctrlSetBackgroundColor [0.4, 0.4, 0.4, 1];} forEach _row;
+
+            _ctrlColumn1 ctrlSetText _picture;
+            _ctrlColumn2 ctrlSetText (str _numKills);
+            _ctrlColumn3 ctrlSetText (str _numOther);
+            _ctrlColumn4 ctrlSetText ((str (round (100 * _numHeadshots / (_numKills + _numOther)))) + "%");
+            _ctrlColumn5 ctrlSetText ((str (round _avgDis)) + "m");
+            _ctrlColumn6 ctrlSetText ([(str _xp), ""] select _showDeaths);
+        };
+    } forEach _history;
+};
+
+SC_fnc_setupEquipmentDialog = {
+    params ["_category"];
+
+    _equipmentDialog = uiNamespace getVariable "SC_var_equipmentDialog";
+    _controlsTable = _equipmentDialog displayCtrl 1611;
+    ctClear _controlsTable;
+    (ctAddHeader _controlsTable) params ["", "_header"];
+
+    _header params ["_ctrlHeaderBackground",
+        "_ctrlHeaderColumn1", "_ctrlHeaderColumn2", "_ctrlHeaderColumn3"
+    ];
+
+    _ctrlHeaderBackground ctrlSetBackgroundColor [0, 0.3, 0.6, 1];
+    _ctrlHeaderColumn1 ctrlSetText "Picture";
+    _ctrlHeaderColumn2 ctrlSetText "Name";
+    _ctrlHeaderColumn3 ctrlSetText "Rank";
+    _items = [];
+
+    if (_category == "vehicles") then {
+        _items = (getArray (missionConfigFile >> "vehicles")) call SC_fnc_filterConfigArr;
+    };
+
+    if (_category == "medic") then {
+        _items = [["Medikit", 5]];
+    };
+
+    if (_category == "general") then {
+        _items = ([((getarray (missionConfigFile >> "general")) + (getarray (missionConfigFile >> ((str (side (group player))) + "General")))) call SC_fnc_filterConfigArr, [], {_x select 1}, "ASCEND"] call BIS_fnc_sortBy);
+    };
+    
+    if (_category == "marksman") then {
+        _items = ([((getarray (missionConfigFile >> "marksman")) + (getarray (missionConfigFile >> ((str (side (group player))) + "Marksman")))) call SC_fnc_filterConfigArr, [], {_x select 1}, "ASCEND"] call BIS_fnc_sortBy);
+    };
+
+    if (_category == "machinegunner") then {
+        _items = ([(getarray (missionConfigFile >> "machinegunner")) call SC_fnc_filterConfigArr, [], {_x select 1}, "ASCEND"] call BIS_fnc_sortBy);
+    };
+    
+    if (_category == "grenadier") then {
+        _items = ([(getarray (missionConfigFile >> "grenadier")) call SC_fnc_filterConfigArr, [], {_x select 1}, "ASCEND"] call BIS_fnc_sortBy);
+    };
+    
+    if (_category == "launcher") then {
+        _items = ([(getarray (missionConfigFile >> "launcher")) call SC_fnc_filterConfigArr, [], {_x select 1}, "ASCEND"] call BIS_fnc_sortBy);
+    };
+
+    if (_category == "armor") then {
+        _items = ([(getarray (missionConfigFile >> ((str (side (group player))) + "Armor"))) call SC_fnc_filterConfigArr, [], {_x select 1}, "ASCEND"] call BIS_fnc_sortBy);
+    };
+
+    if (_category == "suppressor") then {
+        _items = ([(getarray (missionConfigFile >> "suppressor")) call SC_fnc_filterConfigArr, [], {_x select 1}, "ASCEND"] call BIS_fnc_sortBy);
+    };
+
+    _playerRank = player getVariable ["SC_var_rank", 1];
+
+    {
+        _x params ["_type", "_rank"];
+
+        (ctAddRow _controlsTable) params ["", "_row"];
+        _row params ["", "_ctrlColumn1", "_ctrlColumn2", "_ctrlColumn3"];
+
+        _color = [0.4, 0.4, 0.4, 1];
+
+        if (_playerRank < _rank) then {
+            _color = [0.23, 0.23, 0.23, 1];
+        };
+        
+        if ((_category == "vehicles") && {!(_x in SC_var_availableVehicles)}) then {
+            _color = [0.4, 0.1, 0.1, 1];
+        };
+
+        {_x ctrlSetBackgroundColor _color;} forEach _row;
+
+        _ctrlColumn1 ctrlSetText ([_type] call SC_fnc_getPicture);
+        _ctrlColumn2 ctrlSetText ([_type] call SC_fnc_getDisplayName);
+        _ctrlColumn3 ctrlSetText (str _rank);
+    } forEach _items;
+};
+
+SC_fnc_setupVehicleSpawnDialog = {
+    createDialog "vehicleSpawnDialog";
+
+    _this spawn {
+        params ["_allowPlanes", "_place", ["_planeSpawnIdx", -1]];
+
+        SC_var_currentPlace = _place;
+        SC_var_currentPlaneSpawnIdx = _planeSpawnIdx;
+
+        _equipmentDialog = uiNamespace getVariable "SC_var_vehicleSpawnDialog";
+
+        _equipmentDialog spawn {
+            waitUntil {
+                _this call {
+                    if !(isNull _this) then {
+                        _vehicleCooldown = player getVariable ["SC_var_vehicleCooldown", 9999];
+                        _timeStr = [_vehicleCooldown] call SC_fnc_secondsToMinSec;
+                        (_this displayCtrl 1003) ctrlSetText "Spawn Cooldown: " + _timeStr + " min";
+                    };
+                };
+
+                (isNull _this)
+            };
+        };
+
+        (_equipmentDialog displayCtrl 1600) ctrlAddEventHandler ["ButtonClick", {
+            _equipmentDialog = uiNamespace getVariable "SC_var_vehicleSpawnDialog";
+            _controlsTable = _equipmentDialog displayCtrl 1500;
+            _vehicleIndex = ctCurSel _controlsTable;
+            _allVehicles = (getArray (missionConfigFile >> "vehicles")) call SC_fnc_filterConfigArr;
+            (_allVehicles select _vehicleIndex) params ["_type", "_rank"];
+            _playerRank = player getVariable ["SC_var_rank", 1];
+
+            if ((_playerRank >= _rank) && {(SC_var_availableVehicles findIf {(_x select 0) == _type}) != -1}) then {
+                [player, SC_var_currentPlace, _type, SC_var_currentPlaneSpawnIdx] remoteExec ["SC_fnc_spawnVehicle", 2];
+                closeDialog 2;
+            };
+        }];
+
+        _controlsTable = _equipmentDialog displayCtrl 1500;
+        ctClear _controlsTable;
+        (ctAddHeader _controlsTable) params ["", "_header"];
+
+        _header params ["_ctrlHeaderBackground",
+            "_ctrlHeaderColumn1", "_ctrlHeaderColumn2", "_ctrlHeaderColumn3"
+        ];
+
+        _ctrlHeaderBackground ctrlSetBackgroundColor [0, 0.3, 0.6, 1];
+        _ctrlHeaderColumn1 ctrlSetText "Picture";
+        _ctrlHeaderColumn2 ctrlSetText "Name";
+        _ctrlHeaderColumn3 ctrlSetText "Rank";
+
+        _playerRank = player getVariable ["SC_var_rank", 1];
+
+        {
+            _x params ["_type", "_rank"];
+
+            (ctAddRow _controlsTable) params ["", "_row"];
+            _row params ["_ctrlBackground", "_ctrlColumn1", "_ctrlColumn2", "_ctrlColumn3"];
+            _color = [0.4, 0.4, 0.4, 1];
+
+            if (_playerRank < _rank) then {
+                _color = [0.23, 0.23, 0.23, 1];
+            };
+            
+            if (!(_x in SC_var_availableVehicles) || {(!_allowPlanes) && {(_type isKindOf "Plane_Base_F") || {_type isKindOf "Plane"}}}) then {
+                _color = [0.4, 0.1, 0.1, 1];
+            };
+
+            {_x ctrlSetBackgroundColor _color;} forEach _row;
+
+            _ctrlColumn2 ctrlSetBackgroundColor [0, 0, 0, 0];
+            _ctrlColumn3 ctrlSetBackgroundColor [0, 0, 0, 0];
+
+            _ctrlColumn1 ctrlSetText ([_type] call SC_fnc_getPicture);
+            _ctrlColumn2 ctrlSetText ([_type] call SC_fnc_getDisplayName);
+            _ctrlColumn3 ctrlSetText (str _rank);
+        } forEach ((getArray (missionConfigFile >> "vehicles")) call SC_fnc_filterConfigArr);
     };
 };

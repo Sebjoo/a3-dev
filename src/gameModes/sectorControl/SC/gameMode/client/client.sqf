@@ -109,12 +109,113 @@ SC_fnc_onKilled = {
     3 fadesound 0;
     waitUntil {visibleMap};
     [false] call KF_fnc_EnableMidFeed;
+    [] spawn SC_fnc_respawnMapDisplay;
     MM_var_showAliveGroupUnits = false;
     call MM_fnc_updateDrawArrayImmediate;
     (uiNamespace getVariable "SC_var_sectorControlDisplay" displayctrl 1999) ctrlSetTextColor [1, 1, 1, 0];
-    sleep 4;
     waitUntil {alive player};
     [SC_var_hudEnabled] call KF_fnc_EnableMidFeed;
+};
+
+SC_fnc_respawnMapDisplay = {    
+    waitUntil {
+        call {
+            _respawnMapDisplay = uiNamespace getVariable ["SC_var_respawnMapDisplay", displayNull];
+            _spectatorActive = !(isNull (uiNamespace getVariable ["SC_var_spectatorDisplay", displayNull]));
+            _respawnMapDisplayActive = !(isNull _respawnMapDisplay);
+            _escMenuActive = !(isNull (findDisplay 49));
+            _shouldDrawRespawnMapDisplay = !(alive player) && {!_spectatorActive} && {!_escMenuActive};
+
+            if (_respawnMapDisplayActive != _shouldDrawRespawnMapDisplay) then {
+                if _shouldDrawRespawnMapDisplay then {
+                    (findDisplay 46) createDisplay "respawnMapDisplay";
+                } else {
+                    _respawnMapDisplay closeDisplay 1;
+                };
+            };
+            
+            (alive player)
+        }
+    };
+};
+
+SC_fnc_spectate = {
+    _respawnMapDisplay = uiNamespace getVariable ["SC_var_respawnMapDisplay", displayNull];
+    
+    if !(isNull _respawnMapDisplay) then {
+        _respawnMapDisplay closeDisplay 1;
+    };
+
+    (findDisplay 46) createDisplay "spectatorDisplay";
+    waitUntil {!(isNull (uiNamespace getVariable ["SC_var_spectatorDisplay", displayNull]))};
+    _spectatorDisplay = uiNamespace getVariable ["SC_var_spectatorDisplay", displayNull];
+    openMap false;
+    _oldDeathFeedState = KF_var_DeathFeedEnabled;
+    [false] call KF_fnc_EnableDeathFeed;
+    _combo = _spectatorDisplay displayCtrl 2100;
+    _oldAvailableUnits = [];
+    TDI_var_DrawUnitsOnSpectator = true;
+    cutText ["", "BLACK FADED", 99999999];
+    0 fadeSound 0;
+    _fadedBlack = true;
+
+    waitUntil {
+        _availableUnits = ((player getVariable ["SC_var_groupUnits", []]) - [player]) select {
+            (alive _x) && {simulationEnabled _x} && {!(_x getVariable ["ais_unconscious", false])}
+        };
+
+        if !(_availableUnits isEqualTo _oldAvailableUnits) then {
+            lbClear _combo;
+
+            {
+                _combo lbAdd (_x getVariable ["SC_var_name", (name _x)]);
+            } forEach _availableUnits;
+
+            _newSelectedIndex = _availableUnits findIf {_x isEqualTo focusOn};
+
+            if (_newSelectedIndex == -1) then {
+                _newSelectedIndex = 0;
+            };
+
+            _combo lbSetCurSel _newSelectedIndex;
+            _oldAvailableUnits = +_availableUnits;
+        };
+
+        _selectedIndex = lbCurSel _combo;
+        _viewedIndex = _availableUnits findIf {_x isEqualTo focusOn};
+
+        if (_selectedIndex != _viewedIndex) then {
+            _newSelectedUnit = _availableUnits select _selectedIndex;
+            _newSelectedUnit switchCamera (focusOn getVariable ["SC_var_cameraView", "EXTERNAL"]);
+            call MM_fnc_updateDrawArrayImmediate;
+        };
+
+        if (cameraView != (focusOn getVariable ["SC_var_cameraView", "EXTERNAL"])) then {
+            focusOn switchCamera (focusOn getVariable ["SC_var_cameraView", "EXTERNAL"]);
+            call MM_fnc_updateDrawArrayImmediate;
+        };
+
+        if (!(alive focusOn) != _fadedBlack) then {
+            if _fadedBlack then {
+                cutText ["", "PLAIN", 0, false, false];
+                1 fadeSound ([1, 0.3] select SC_var_earplugsOn);
+            } else {
+                cutText ["", "BLACK FADED", 9999999, false, false];
+                0 fadeSound 0;
+            };
+
+            _fadedBlack = !_fadedBlack;
+        };
+
+        (isNull _spectatorDisplay)
+    };
+
+    player switchCamera SC_var_lastView;
+    TDI_var_DrawUnitsOnSpectator = false;
+    [_oldDeathFeedState] call KF_fnc_EnableDeathFeed;
+    openMap true;
+    cutText ["", "PLAIN", 0, false, false];
+    0 fadeSound 0;
 };
 
 SC_fnc_setArsenalVisionMode = {
@@ -156,7 +257,10 @@ SC_fnc_onRespawn = {
             player setDir (markerDir _baseMarker);
             waitUntil {((player distance _baseMarkerPos) > 8) || {!(alive player)}};
             [player, true] call ADG_fnc_allowDamage;
-            ["spawnprotectiondisabled"] call SC_fnc_showNotificationIfHudIsEnabled;
+
+            if (simulationEnabled player) then {
+                ["spawnprotectiondisabled"] call SC_fnc_showNotificationIfHudIsEnabled;
+            };
         } else {
             sleep 4;
 
@@ -242,4 +346,115 @@ SC_fnc_moveAiOutOfVehicle = {
             (group _assignedUnit) leaveVehicle _vehicle;
         };
     } forEach (fullCrew _vehicle);
+};
+
+SC_fnc_addToKillHistory = {
+    params ["_source", "_distance", "_isRealKill", "_isHeadShot", "_xp"];
+    
+    _headshotRate = profileNamespace getVariable ["SC_var_headshotRate", 1];
+    _numKills = profileNamespace getVariable ["SC_var_numKills", 0];
+    _numOther = profileNamespace getVariable ["SC_var_numOther", 0];
+
+    if _isRealKill then {
+        profileNamespace setVariable ["SC_var_numKills", _numKills + 1];
+    } else {
+        profileNamespace setVariable ["SC_var_numOther", _numOther + 1];
+    };
+
+    _numAll = _numKills + _numOther;
+    _newHeadshotRate = (_headshotRate * _numAll + ([0, 1] select _isHeadShot)) / (_numAll + 1);
+    profileNamespace setVariable ["SC_var_headshotRate", _newHeadshotRate];
+
+    if (isNil {profileNamespace getVariable "SC_var_killHistory"}) then {
+        profileNamespace setVariable ["SC_var_killHistory", []];
+    };
+
+    _data = profileNamespace getVariable "SC_var_killHistory";
+    _idx = _data findIf {(_x select 0) == _source};
+
+    if (_idx == -1) then {
+        _data pushBack [_source, 0, 0, 0, 0, 0];
+        _idx = (count _data) - 1;
+    };
+
+    (_data select _idx) params ["", "_numKills", "_numOther", "_numHeadshots", "_oldAvgDis", "_oldXp"];
+    
+    _numAll = _numKills + _numOther;
+    _newAvgDis = ((_oldAvgDis * _numAll) + _distance) / (_numAll + 1);
+
+    _data set [_idx, [
+        _source,
+        _numKills + ([0, 1] select _isRealKill),
+        _numOther + ([0, 1] select !_isRealKill),
+        _numHeadshots + ([0, 1] select _isHeadShot),
+        _newAvgDis,
+        _oldXp + _xp
+    ]];
+};
+
+SC_fnc_addToDeathHistory = {
+    params ["_source", "_distance", "_isRealKill", "_isHeadshot"];
+
+    if _isRealKill then {
+        _numDeaths = profileNamespace getVariable ["SC_var_numDeaths", 0];
+        profileNamespace setVariable ["SC_var_numDeaths", _numDeaths + 1];
+    };
+
+    if (isNil {profileNamespace getVariable "SC_var_deathHistory"}) then {
+        profileNamespace setVariable ["SC_var_deathHistory", []];
+    };
+
+    _data = profileNamespace getVariable "SC_var_deathHistory";
+    _idx = _data findIf {(_x select 0) == _source};
+
+    if (_idx == -1) then {
+        _data pushBack [_source, 0, 0, 0, 0];
+        _idx = (count _data) - 1;
+    };
+
+    (_data select _idx) params ["", "_numKills", "_numOther", "_numHeadshots", "_oldAvgDis"];
+
+    _numAll = _numKills + _numOther;
+    _newAvgDis = ((_oldAvgDis * _numAll) + _distance) / (_numAll + 1);
+
+    _data set [_idx, [
+        _source,
+        _numKills + ([0, 1] select _isRealKill),
+        _numOther + ([0, 1] select !_isRealKill),
+        _numHeadshots + ([0, 1] select _isHeadShot),
+        _newAvgDis
+    ]];
+};
+
+SC_fnc_addHeal = {
+    _numHeals = profileNamespace getVariable ["SC_var_numHeals", 0];
+    profileNamespace setVariable ["SC_var_numHeals", _numHeals + 1];
+};
+
+SC_fnc_addSelfHeal = {
+    _numHeals = profileNamespace getVariable ["SC_var_numSelfHeals", 0];
+    profileNamespace setVariable ["SC_var_numSelfHeals", _numHeals + 1];
+};
+
+SC_fnc_addCapturedSector = {
+    _numCapturedSectors = profileNamespace getVariable ["SC_var_numCapturedSectors", 0];
+    profileNamespace setVariable ["SC_var_numCapturedSectors", _numCapturedSectors + 1];
+};
+
+SC_fnc_addRevive = {
+    params ["_reviver"];
+
+    if (_reviver isEqualTo player) then {
+        _numRevives = profileNamespace getVariable ["SC_var_numRevives", 0];
+        profileNamespace setVariable ["SC_var_numRevives", _numRevives + 1];
+    };
+};
+
+SC_fnc_addRevived = {
+    params ["_revived"];
+
+    if (_revived isEqualTo player) then {
+        _numRevived = profileNamespace getVariable ["SC_var_numRevived", 0];
+        profileNamespace setVariable ["SC_var_numRevived", _numRevived + 1];
+    };
 };

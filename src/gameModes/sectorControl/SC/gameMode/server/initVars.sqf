@@ -4,6 +4,7 @@ SC_var_GroundWeaponHolders = [];
 
 SC_var_rf_active = isClass (configFile >> "CfgWeapons" >> "SMG_01_black_RF");
 SC_var_lxws_active = isClass (configFile >> "CfgWeapons" >> "arifle_Velko_lxWS");
+SC_var_ef_active = isClass (configFile >> "CfgWeapons" >> "ef_hgun_P07_coy");
 
 SC_var_rankForPerkId = [nil, 1, 6, 18, 35, 67, 100];
 publicVariable "SC_var_rankForPerkId";
@@ -113,7 +114,7 @@ SC_var_mapSize = switch (true) do {
 SC_var_hugeMap = SC_var_mapSize == "Huge";
 publicVariable "SC_var_hugeMap";
 
-SC_var_ticketGainFactor = 0.02 max (60 / (sqrt SC_var_mapArea));
+SC_var_ticketGainFactor = 0.02 max (800 / (SC_var_mapArea ^ 0.66));
 SC_var_wantedUnitAmount = ([30, 50] select SC_var_hugeMap) min (round (0.052 * (SC_var_mapArea ^ 0.4)));
 
 SC_var_playZoneMiddle = [0, 0, 0];
@@ -122,6 +123,126 @@ SC_var_playZoneMiddle = [0, 0, 0];
 } forEach SC_var_sectors;
 SC_var_playZoneMiddle = SC_var_playZoneMiddle vectorMultiply (1 / (count SC_var_sectors));
 publicVariable "SC_var_playZoneMiddle";
+
+SC_var_vehicleDamageFactor = 0.1 * (("vehicleDamage" call BIS_fnc_getParamValue) + 1);
+publicVariable "SC_var_vehicleDamageFactor";
+
+_oldGameVersion = profileNamespace getVariable ["SC_var_gameVersion", []];
+
+if !(_oldGameVersion isEqualTo productVersion) then {
+    SC_var_launcherAmmos = createHashMap;
+    publicVariable "SC_var_launcherAmmos";
+
+    [] spawn {
+        _isAmmoValid = {
+            params ["_ammo"];
+
+            _return = false;
+            _ammoCfg = configFile >> "CfgAmmo" >> _ammo;
+
+            if (
+                (
+                    ((getNumber (_ammoCfg >> "caliber")) > 12.7) ||
+                    {(getNumber (_ammoCfg >> "explosive")) > 0} ||
+                    {
+                        (["penetrator", "apfsds", "heat", "he_mp", "at", "scalpel", "titan", "vorona", "mraaws", "nlaw", "rpg", "agm", "firefist", "missile", "rocket", "tratnyr"] findIf {((toLower _ammo) find _x) != -1}) != -1
+                    }
+                ) &&
+                {(["water", "smoke", "flare", "leaflet", "laser", "signal", "strobe", "dummy", "fake", "_pellet_", "_sg_", "12g"] findIf {((toLower _ammo) find _x) != -1}) == -1}
+            ) then {
+                _return = true;
+            };
+
+            _return
+        };
+
+        {
+            _weapon = _x;
+            _muzzles = getArray (_weapon >> "muzzles");
+
+            {
+                _mags = getArray (_weapon >> "magazines");
+                {
+                    _ammo = getText (configFile >> "CfgMagazines" >> _x >> "ammo");
+                    if (_ammo != "" && {[_ammo] call _isAmmoValid}) then {
+                        SC_var_launcherAmmos set [_ammo, true];
+                    };
+                } forEach _mags;
+            } forEach _muzzles;
+        } forEach configProperties [configFile >> "CfgWeapons", "isClass _x", true];
+
+        {
+            _vehCfg = _x;
+            _turrets = [configName _vehCfg] call BIS_fnc_getTurrets;
+
+            {
+                _turret = _x;
+                _mags = getArray (_turret >> "magazines");
+
+                {
+                    _ammo = getText (configFile >> "CfgMagazines" >> _x >> "ammo");
+                    
+                    if (_ammo != "" && {[_ammo] call _isAmmoValid}) then {
+                        SC_var_launcherAmmos set [_ammo, true];
+                    };
+                } forEach _mags;
+            } forEach _turrets;
+        } forEach configProperties [configFile >> "CfgVehicles", "isClass _x", true];
+        
+        publicVariable "SC_var_launcherAmmos";
+
+        {
+            _subAmmo = configName _x;
+
+            {
+                _parentAmmo = configName _x;
+                _sub = getText (_x >> "submunitionAmmo");
+
+                if (_sub == _subAmmo) then {
+                    {
+                        _mag = configName _x;
+
+                        if (getText (_x >> "ammo") == _parentAmmo) then {
+                            {
+                                _vehCfg = _x;
+                                _turrets = [configName _vehCfg] call BIS_fnc_getTurrets;
+
+                                {
+                                    _turretCfg = _x;
+                                    _mags = getArray (_turretCfg >> "magazines");
+
+                                    if (_mag in _mags) then {
+                                        SC_var_launcherAmmos set [_subAmmo, true, true];
+                                    };
+                                } forEach _turrets;
+                            } forEach configProperties [configFile >> "CfgVehicles", "isClass _x", true];
+
+                            {
+                                _weap = _x;
+
+                                if ((getNumber (_weap >> "type")) == 4) then {
+                                    _mags = getArray (_weap >> "magazines");
+
+                                    if (_mag in _mags && {[_parentAmmo] call _isAmmoValid}) then {
+                                        SC_var_launcherAmmos set [_subAmmo, true, true];
+                                    };
+                                };
+                            } forEach configProperties [configFile >> "CfgWeapons", "isClass _x", true];
+                        };
+                    } forEach configProperties [configFile >> "CfgMagazines", "isClass _x", true];
+                };
+            } forEach configProperties [configFile >> "CfgAmmo", "isClass _x", true];
+        } forEach configProperties [configFile >> "CfgAmmo", "isClass _x", true];
+
+        publicVariable "SC_var_launcherAmmos";
+        profileNamespace setVariable ["SC_var_launcherAmmos", SC_var_launcherAmmos];
+        profileNamespace setVariable ["SC_var_gameVersion", productVersion];
+        saveProfileNamespace;
+    };
+} else {
+    SC_var_launcherAmmos = profileNamespace getVariable "SC_var_launcherAmmos";
+    publicVariable "SC_var_launcherAmmos";
+};
 
 SC_var_maxDistanceToUseableGroundVehicle = switch SC_var_mapSize do {
     case "Small": {10};
@@ -195,8 +316,8 @@ SC_var_airDropDurationMins = switch SC_var_mapSize do {
 
 SC_var_maxVehicleRank = switch SC_var_mapSize do {
     case "Small": {27};
-    case "Medium": {41};
-    case "Large": {66};
+    case "Medium": {55};
+    case "Large": {75};
     case "Huge": {1000};
 };
 

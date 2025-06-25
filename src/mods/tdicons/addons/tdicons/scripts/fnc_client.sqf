@@ -90,19 +90,47 @@ TDI_fnc_getGroupUnits = {
     (units (group _unit))
 };
 
+TDI_fnc_UAVControl = {
+    params ["_unit", "_mode", ["_altMode", ""]];
+    _ret = objNull;
+
+    _UAVControl = UAVControl _unit;
+    _UAVControls = [_UAVControl select [0, 2]];
+
+    if ((count _UAVControl) == 4) then {
+        _UAVControls pushBack (_UAVControl select [2, 2]);
+    };
+
+    _pos = (_UAVControls apply {_x select 1}) find _mode;
+
+    if (_pos != -1) then {
+        _ret = (_UAVControls select _pos) select 0;
+    } else {
+        if (_altMode != "") then {
+            _pos = (_UAVControls apply {_x select 1}) find _altMode;
+
+            if (_pos != -1) then {
+                _ret = (_UAVControls select _pos) select 0;
+            };
+        };
+    };
+
+    _ret
+};
+
 TDI_fnc_updateDrawArrayLoop = {
     waitUntil {
         waitUntil {isNull (findDisplay 49)};
 
-        _isInSpectator = (!(isNil "BIS_EGSpectator_initialized") || {!(isNil "SPECTATE_THREAD")});
-        _unit = if _isInSpectator then {cameraOn} else {player};
+        _unit = if !(unitIsUAV focusOn) then {focusOn} else {[(objectParent focusOn), "DRIVER", "GUNNER"] call TDI_fnc_UAVControl};
+        _isInSpectator = !(_unit isEqualTo player);
         _par = objectParent _unit;
-        _group = group player;
+        _group = group _unit;
         _side = side (group _unit);
-        _groupUnits = [player] call TDI_fnc_getGroupUnits;
-        _uav = getConnectedUAV player;
+        _groupUnits = [_unit] call TDI_fnc_getGroupUnits;
+        _uav = getConnectedUAV _unit;
         _hasUav = !(isNull _uav);
-        _isInUav = _hasUav && {player in ([_uav, true] call TDI_fnc_UAVControlUnits)};
+        _isInUav = _hasUav && {_unit in ([_uav, true] call TDI_fnc_UAVControlUnits)};
         _drawUnit = _isInUav || {(cameraView == "EXTERNAL") && {!(isNull _par)} && {((typeOf _par) find "arachute") == -1}};
         _groupUnitsUavs = [];
         {_groupUnitsUavs pushBackUnique (getConnectedUAV _x);} forEach _groupUnits;
@@ -345,7 +373,7 @@ TDI_fnc_updateDrawArrayLoop = {
                             if _xIsUav then {
                                 !_isInUav && {_x isEqualTo _uav}
                             } else {
-                                _x isEqualTo player
+                                _x isEqualTo _unit
                             }
                         ) then {
                             TDI_var_colorYellow
@@ -373,7 +401,6 @@ TDI_fnc_updateDrawArrayLoop = {
         TDI_var_preDrawArray sort false;
         TDI_var_drawArray = TDI_var_preDrawArray;
         TDI_var_preDrawArray = [];
-        //TDI_var_drawArray = ([TDI_var_preDrawArray, [], {_x select 0}, "DESCEND"] call BIS_fnc_sortBy) apply {_x select 1};
 
         false
     };

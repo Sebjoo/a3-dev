@@ -52,3 +52,9 @@ class thermalVision {
     texts[] = {"Disabled", "Enabled"};
     default = 1;
 };
+class vehicleDamage {
+    title = "Launcher/High Caliber (> 12.7 mm) Damage";
+    values[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    texts[] = {"10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%"};
+    default = 4;
+};

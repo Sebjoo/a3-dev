@@ -7,6 +7,7 @@ SC_var_xpRanks pushBack 0;
 
 SC_var_rf_active = isClass (configFile >> "CfgWeapons" >> "SMG_01_black_RF");
 SC_var_lxws_active = isClass (configFile >> "CfgWeapons" >> "arifle_Velko_lxWS");
+SC_var_ef_active = isClass (configFile >> "CfgWeapons" >> "arifle_Velko_lxWS");
 
 SC_var_perkConfig = [
     ["Experience", "EXPR", 1],
@@ -79,9 +80,54 @@ SC_var_hudUpdateSectorOverviewLoopScript = scriptNull;
 SC_var_hudUpdateGroupOverviewLoopScript = scriptNull;
 SC_var_hudUpdatePlayerStatsLoopScript = scriptNull;
 SC_var_disableLeftGpsLoopScript = scriptNull;
+SC_var_broadcastCameraViewLoopScript = scriptNull;
 
 [profileNameSpace getVariable ["SC_var_currentViewDistanceFactor", 0.1]] call SC_fnc_setViewDistance;
 [profileNameSpace getVariable ["SC_var_currentGrassViewDistanceFactor", 0]] call SC_fnc_setGrassViewDistance;
+
+if (isNil {profileNamespace getVariable "SC_var_killHistory"}) then {
+    profileNamespace setVariable ["SC_var_killHistory", []];
+};
+
+if (isNil {profileNamespace getVariable "SC_var_deathHistory"}) then {
+    profileNamespace setVariable ["SC_var_deathHistory", []];
+};
+
+if (isNil {profileNamespace getVariable "SC_var_numKills"}) then {
+    profileNamespace setVariable ["SC_var_numKills", 0];
+};
+
+if (isNil {profileNamespace getVariable "SC_var_numOther"}) then {
+    profileNamespace setVariable ["SC_var_numOther", 0];
+};
+
+if (isNil {profileNamespace getVariable "SC_var_numDeaths"}) then {
+    profileNamespace setVariable ["SC_var_numDeaths", 0];
+};
+
+if (isNil {profileNamespace getVariable "SC_var_headshotRate"}) then {
+    profileNamespace setVariable ["SC_var_headshotRate", 1];
+};
+
+if (isNil {profileNamespace getVariable "SC_var_numHeals"}) then {
+    profileNamespace setVariable ["SC_var_numHeals", 0];
+};
+
+if (isNil {profileNamespace getVariable "SC_var_numSelfHeals"}) then {
+    profileNamespace setVariable ["SC_var_numSelfHeals", 0];
+};
+
+if (isNil {profileNamespace getVariable "SC_var_numSectorsCaptured"}) then {
+    profileNamespace setVariable ["SC_var_numSectorsCaptured", 0];
+};
+
+if (isNil {profileNamespace getVariable "SC_var_numRevives"}) then {
+    profileNamespace setVariable ["SC_var_numRevives", 0];
+};
+
+if (isNil {profileNamespace getVariable "SC_var_numRevived"}) then {
+    profileNamespace setVariable ["SC_var_numRevived", 0];
+};
 
 SC_var_teamMapColor = switch playerSide do {
     case west: {[0, 4/7, 1, 1]};

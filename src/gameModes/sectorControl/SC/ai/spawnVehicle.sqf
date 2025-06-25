@@ -36,8 +36,8 @@ SC_fnc_spawnVehicle = {
             breakOut "main";
         };
 
-        _unit setVariable ["SC_var_vehicleCooldown", 9999];
-        _unit setVariable ["SC_var_vehicleActionCooldown", 9999];
+        _unit setVariable ["SC_var_vehicleCooldown", 9999, true];
+        _unit setVariable ["SC_var_vehicleActionCooldown", 9999, true];
     };
 
     _pos = if (_planeOrVehSpawnId != -1) then {
@@ -88,8 +88,8 @@ SC_fnc_spawnVehicle = {
         
         if (isPlayer _unit) then {
             ["vehiclesystem", ["Vehicle could not be spawned, cooldown reset."]] remoteExec ["BIS_fnc_showNotification", _unit];
-            _unit setVariable ["SC_var_vehicleCooldown", 0];
-            _unit setVariable ["SC_var_vehicleActionCooldown", 5];
+            _unit setVariable ["SC_var_vehicleCooldown", 0, true];
+            _unit setVariable ["SC_var_vehicleActionCooldown", 5, true];
         };
     } else {
         _veh = [_type, _safePos] call {
@@ -98,9 +98,7 @@ SC_fnc_spawnVehicle = {
             _veh = createVehicle [_type, _safePos, [], 7, "NONE"];
             _veh setVariable ["BIS_enableRandomization", false];
             [_veh, false] call ADG_fnc_allowDamage;
-            [_veh] spawn KF_fnc_entityInitServer;
-            [_veh] spawn MM_fnc_entityInitServer;
-            [_veh] spawn TDI_fnc_entityInitServer;
+            [_veh] remoteExecCall ["SC_fnc_addHandleDamageToVehicle", 0, true];
             _veh disableTIEquipment true;
 
             _veh
@@ -182,8 +180,8 @@ SC_fnc_spawnVehicle = {
         };
 
         if ((isPlayer _unit) && {_wasPlayer}) then {
-            _unit setVariable ["SC_var_vehicleCooldown", 300];
-            _unit setVariable ["SC_var_vehicleActionCooldown", 5];
+            _unit setVariable ["SC_var_vehicleCooldown", 300, true];
+            _unit setVariable ["SC_var_vehicleActionCooldown", 5, true];
             _unitText = "You " + _textEnd;
             ["vehiclesystem", [_unitText]] remoteExec ["SC_fnc_showNotificationIfHudIsEnabled", _unit];
         } else {
@@ -232,9 +230,6 @@ SC_fnc_spawnVehicle = {
                 _x setVariable ["SC_var_movingToSectorInd", ""];
 
                 [_x] call SC_fnc_registerEntityServer;
-                [_x] spawn KF_fnc_entityInitServer;
-                [_x] spawn MM_fnc_entityInitServer;
-                [_x] spawn TDI_fnc_entityInitServer;
             } forEach _crew;
             
             {

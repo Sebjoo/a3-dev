@@ -2,7 +2,7 @@
     waitUntil {!(isNil "KF_var_serverInitDone")};
 
     KF_var_AddMidFeedInfo pushBack {
-        params ["_unit","_hitter", "_isKill", "_isTk", "_hitterDistance", "_hitterTypeSourceSelArr", "_typeOfKilledVehicle", "_externalUnitDeathCall"];
+        params ["_unit", "_hitter", "_isKill", "_isTk", "_hitterDistance", "_hitterTypeSourceSelArr", "_typeOfKilledVehicle", "_externalUnitDeathCall"];
 
         if _isTk then {""} else {
             _message = "";
@@ -40,9 +40,43 @@
 
             _xp = 10 * (round (_xp / 10));
             [_xp] remoteExecCall ["SC_fnc_addXp", _hitter];
+            (_hitterTypeSourceSelArr select 0) params ["_type", "_source"];
+
+            if (_source != "") then {
+                _isHeadShot = "Headshot" in _type;
+                _isRealKill = _externalUnitDeathCall && _isKill;
+
+                [_source, _hitterDistance, _isRealKill, _isHeadShot, _xp] remoteExecCall ["SC_fnc_addToKillHistory", _hitter];
+            };
             
             (_message + (str _xp) + " XP")
         }
+    };
+
+    KF_var_AddDeathFeedInfo pushBack {
+        params ["_unit", "_killer", "", "", "_hitData", "", "", "_externalUnitDeathCall"];
+
+        {
+            _x params ["_hitter", "_hitterTypeSourceSelArr", "_distance"];
+
+            _isRealKill = (_hitter isEqualTo _killer) && _externalUnitDeathCall;
+
+            if _isRealKill then {
+                _source = (_hitterTypeSourceSelArr select 0) select 1;
+                _isHeadshot = "Headshot" in ((_hitterTypeSourceSelArr select 0) select 0);
+            
+                [_source, _distance, _isRealKill, _isHeadshot] remoteExecCall ["SC_fnc_addToDeathHistory", _unit];
+            } else {
+                {
+                    _x params ["_type", "_source"];
+                    _isHeadShot = "Headshot" in _type;
+
+                    [_source, _distance, _isRealKill, _isHeadshot] remoteExecCall ["SC_fnc_addToDeathHistory", _unit];
+                } forEach _hitterTypeSourceSelArr;
+            };
+        } forEach _hitData;
+
+        ""
     };
 };
 

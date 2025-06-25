@@ -426,7 +426,7 @@ DM_fnc_spectator = {
             _on = false;
 
             waitUntil {
-                if (((simulationEnabled cameraOn) && {alive cameraOn} && {((positionCameraToWorld [0, 0, 0]) distance [0, 0, 0]) > 100}) isEqualTo !_on) then {
+                if (((simulationEnabled focusOn) && {alive focusOn} && {((positionCameraToWorld [0, 0, 0]) distance [0, 0, 0]) > 100}) isEqualTo !_on) then {
                     _on = !_on;
                     cutText ["", (if _on then {"PLAIN"} else {"BLACK FADED"}), 0, true];
                     0 fadesound (if _on then {1} else {0});

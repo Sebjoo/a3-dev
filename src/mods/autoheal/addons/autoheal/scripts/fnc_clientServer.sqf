@@ -1,4 +1,5 @@
 AH_var_clientRunning = nil;
+AH_var_entityCreatedEhId = -1;
 
 AH_fnc_setDamageClientServer = {
     params ["_unit", "_newDamage", "_newHitPointsDamage"];
@@ -174,6 +175,14 @@ AH_fnc_startAutoHealClientServer = {
             {
                 [_x] call AH_fnc_entityInitClientServer;
             } forEach (entities [["CAManBase"], [], true, false]);
+
+            AH_var_entityCreatedEhId = addMissionEventHandler ["EntityCreated", {
+                params ["_entity"];
+
+                if (_entity isKindOf "CAManBase") then {
+                    [_entity] spawn AH_fnc_entityInitClientServer;
+                };
+            }];
             
             if !isMultiplayer then {
                 AH_var_loadedEhId = addMissionEventHandler ["Loaded", {
@@ -210,6 +219,9 @@ AH_fnc_stopAutoHealClientServer = {
                 _x setVariable ["AH_var_hitEhId", nil];
                 _x setVariable ["AH_var_localEhId", nil];
             } forEach (entities [["CAManBase"], [], true, false]);
+
+            removeMissionEventHandler ["EntityCreated", AH_var_entityCreatedEhId];
+            AH_var_entityCreatedEhId = -1;
 
             if !isMultiplayer then {
                 removeMissionEventHandler ["Loaded", AH_var_loadedEhId];

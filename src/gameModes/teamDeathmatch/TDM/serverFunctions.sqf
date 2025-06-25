@@ -94,15 +94,6 @@ DM_fnc_initPlayerServer = {
     params ["_player"];
 
     _player setVariable ["DM_var_arsenalOpened", false, true];
-
-    if DM_var_autoHealEnabled then {
-        [_player] spawn AH_fnc_entityInitServer;
-    };
-
-    [_player] spawn DS_fnc_entityInitServer;
-    [_player] spawn KF_fnc_entityInitServer;
-    [_player] spawn MM_fnc_entityInitServer;
-    [_player] spawn TDI_fnc_entityInitServer;
 };
 
 DM_fnc_resetPlayerScores = {
@@ -618,15 +609,6 @@ DM_fnc_aiPlayer = {
 
     _unit enableSimulationGlobal true;
     _unit setPos _safePos;
-
-    if DM_var_autoHealEnabled then {
-        [_unit] spawn AH_fnc_entityInitServer;
-    };
-
-    [_unit] spawn DS_fnc_entityInitServer;
-    [_unit] spawn KF_fnc_entityInitServer;
-    [_unit] spawn MM_fnc_entityInitServer;
-    [_unit] spawn TDI_fnc_entityInitServer;
 
     ([_relRoundNumber] call DM_fnc_calculateItems) params ["_weps", "_items", "_mags", "_bags"];
 

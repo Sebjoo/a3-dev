@@ -40,7 +40,7 @@ AH_fnc_startAutoHealServer = {
         } else {
             if (isNil "AH_var_serverRunning") then {
                 AH_var_serverRunning = true;
-                AH_var_remoteExecId = [{waitUntil {!(isNil "AH_var_clientServerInitDone")}; call AH_fnc_startAutoHealClientServer;}] remoteExecCall ["spawn", 0, true];
+                AH_var_remoteExecId = [[], {waitUntil {!(isNil "AH_var_clientServerInitDone")}; call AH_fnc_startAutoHealClientServer;}] remoteExecCall ["spawn", 0, true];
             };
         };
     };

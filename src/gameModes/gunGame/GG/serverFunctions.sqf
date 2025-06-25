@@ -564,10 +564,6 @@ GG_fnc_respawnServer = {
 GG_fnc_initPlayer = {
     params ["_player"];
 
-    [_player] spawn AH_fnc_entityInitServer;
-    [_player] spawn DS_fnc_entityInitServer;
-    [_player] spawn KF_fnc_entityInitServer;
-
     _player addRating ((-3000) - (rating _player));
     _player setVariable ["GG_var_deaths", 0, true];
     _uid = getPlayerUID _player;

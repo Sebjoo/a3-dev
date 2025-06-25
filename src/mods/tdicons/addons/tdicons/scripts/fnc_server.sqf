@@ -1,4 +1,5 @@
 TDI_var_serverRunning = nil;
+TDI_var_entityCreatedEhId = -1;
 TDI_var_remoteExecId = "";
 
 TDI_var_ShowAllSides = false;
@@ -128,6 +129,14 @@ TDI_fnc_startTdIconsServer = {
                 [_x] spawn TDI_fnc_entityInitServer;
             } forEach (entities [["CAManBase"], [""], true, false]);
 
+            TDI_var_entityCreatedEhId = addMissionEventHandler ["EntityCreated", {
+                params ["_entity"];
+
+                if (_entity isKindOf "CAManBase") then {
+                    [_entity] spawn TDI_fnc_entityInitServer;
+                };
+            }];
+
             TDI_var_remoteExecId = [[], {if hasInterface then {waitUntil {!(isNil "TDI_var_clientInitDone")}; call TDI_fnc_startTdIconsClient;};}] remoteExecCall ["spawn", 0, true];
         };
     };
@@ -140,6 +149,9 @@ TDI_fnc_stopTdIconsServer = {
 
             remoteExecCall ["", TDI_var_remoteExecId];
             TDI_var_remoteExecId = "";
+
+            removeMissionEventHandler ["EntityCreated", TDI_var_entityCreatedEhId];
+            TDI_var_entityCreatedEhId = -1;
 
             [[], {if hasInterface then {waitUntil {!(isNil "TDI_var_clientInitDone")}; call TDI_fnc_stopTdIconsClient;};}] remoteExecCall ["spawn", 0];
         };

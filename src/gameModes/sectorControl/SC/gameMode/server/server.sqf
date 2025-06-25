@@ -6,22 +6,6 @@ SC_fnc_getSidestring = {
     };
 };
 
-SC_fnc_secondsToMinSec = {
-    params ["_time"];
-
-    _mins = floor (_time / 60);
-    _secs = _time - (_mins * 60);
-    _str = format ["%1:%2", _mins, _secs];
-    _pos = _str find ":";
-    _length = count _str;
-
-    if ((_length - _pos) == 2) then {
-        [(_str select [0, _pos + 1]), (_str select [(_pos + 1), (_length - _pos)])] joinString "0"
-    } else {
-        _str
-    }
-};
-
 SC_fnc_getHexColor = {
     params ["_side"];
 
@@ -100,7 +84,6 @@ SC_fnc_airDrop = {
 
     _box = createVehicle ["box_NATO_equip_F", [0, 0, 0], [], 0, "NONE"];
     _parachute = createVehicle ["Steerable_Parachute_F", [0, 0, 0], [], 0, "NONE"];
-    [_parachute] spawn KF_fnc_entityInitServer;
 
     waitUntil {!(isNull _box) && {!(isNull _parachute)}};
 
@@ -493,7 +476,7 @@ SC_fnc_playerServer = {
     };
 
     _player setVariable ["SC_var_side", _side];
-    _player setVariable ["SC_var_vehicleCooldown", 0];
+    _player setVariable ["SC_var_vehicleCooldown", 0, true];
     _player setVariable ["SC_var_vehicleActionCooldown", 0];
     _player setVariable ["SC_var_timeRemaining", SC_var_unitDespawnTime];
     _player setVariable ["SC_var_isWatched", false];
@@ -506,8 +489,5 @@ SC_fnc_playerServer = {
         [_player, _id] call BIS_fnc_removeRespawnPosition;
     };
     
-    [_player] spawn DS_fnc_entityInitServer;
-    [_player] spawn KF_fnc_entityInitServer;
-    [_player] spawn MM_fnc_entityInitServer;
-    [_player] spawn TDI_fnc_entityInitServer;
+    [_player] remoteExecCall ["SC_fnc_addHandleHeal", 0];
 };

@@ -121,11 +121,6 @@ SC_fnc_spawnAi = {
 
     [_unit, false] call ADG_fnc_allowDamage;
 
-    [_unit] spawn DS_fnc_entityInitServer;
-    [_unit] spawn KF_fnc_entityInitServer;
-    [_unit] spawn MM_fnc_entityInitServer;
-    [_unit] spawn TDI_fnc_entityInitServer;
-
     _perks = [];
 
     _possiblePerks = ([
@@ -182,9 +177,6 @@ SC_fnc_spawnAi = {
             (((_x select 0) select [0, 2]) == "U_") && {((_x select 0) find "Wetsuit") == -1} && {((_x select 0) find "Viper") == -1}
         }
     });
-    if (_bestUniformYet isEqualType "") then {
-        systemChat (str _perks);
-    };
     _unit forceAddUniform (_bestUniformYet select 0);
 
     _preferredVestRank = 1 max (round (_rank * (random 1)));

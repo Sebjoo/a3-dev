@@ -72,7 +72,5 @@ xcopy /h /i /c /k /e /r /y "!missionPath!" ^
     -clear
 
 rmdir /q /s "!missionPath!"
-"%basePath%\scripts\rclone.exe" copy "!missionPath!.pbo" gdrive:a3-dev\build\!missionFolder!
-"%basePath%\scripts\rclone.exe" copy "!missionPath!.pbo.%keyName%.bisign" gdrive:a3-dev\build\!missionFolder!
 
 exit

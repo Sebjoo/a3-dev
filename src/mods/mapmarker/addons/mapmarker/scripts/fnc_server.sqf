@@ -1,4 +1,5 @@
 MM_var_serverRunning = nil;
+MM_var_entityCreatedEhId = -1;
 MM_var_remoteExecId = "";
 MM_fnc_broadcastUnitPosAndDirLoopScript = scriptNull;
 MM_var_entities = [];
@@ -183,6 +184,14 @@ MM_fnc_startMapMarkerServer = {
                 [_x] spawn MM_fnc_entityInitServer;
             } forEach MM_var_entities;
 
+            MM_var_entityCreatedEhId = addMissionEventHandler ["EntityCreated", {
+                params ["_entity"];
+
+                if ((_entity isKindOf "AllVehicles") && {!(_entity isKindOf "Animal")}) then {
+                    [_entity] spawn MM_fnc_entityInitServer;
+                };
+            }];
+
             if isMultiplayer then {
                 MM_fnc_broadcastUnitPosAndDirLoopScript = [] spawn MM_fnc_broadcastUnitPosAndDirLoop;
             } else {
@@ -224,6 +233,9 @@ MM_fnc_stopMapMarkerServer = {
 
                 MM_var_entities = [];
             };
+
+            removeMissionEventHandler ["EntityCreated", MM_var_entityCreatedEhId];
+            MM_var_entityCreatedEhId = -1;
 
             remoteExecCall ["", MM_var_remoteExecId];
             MM_var_remoteExecId = "";

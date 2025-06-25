@@ -1,4 +1,5 @@
 DS_var_serverRunning = nil;
+DS_var_entityCreatedEhId = -1;
 DS_var_remoteExecId = "";
 
 DS_var_weaponSwayEnabled = 1;
@@ -42,6 +43,14 @@ DS_fnc_startDisableStaminaServer = {
         if !isMultiplayer then {
             call DS_fnc_startDisableStaminaClient;
             call DS_fnc_disableStaminaForAiUnits;
+
+            DS_var_entityCreatedEhId = addMissionEventHandler ["EntityCreated", {
+                params ["_entity"];
+
+                if (_entity isKindOf "CAManBase") then {
+                    [_entity] spawn DS_fnc_entityInitServer;
+                };
+            }];
         } else {
             if (isNil "DS_var_serverRunning") then {
                 DS_var_remoteExecId = [[], {if hasInterface then {waitUntil {!(isNil "DS_var_clientInitDone")}; call DS_fnc_startDisableStaminaClient;};}] remoteExecCall ["spawn", 0, true];
@@ -56,6 +65,9 @@ DS_fnc_stopDisableStaminaServer = {
         if !isMultiplayer then {
             call DS_fnc_stopDisableStaminaClient;
             call DS_fnc_enableStaminaForAiUnits;
+
+            removeMissionEventHandler ["EntityCreated", DS_var_entityCreatedEhId];
+            DS_var_entityCreatedEhId = -1;
         } else {
             if !(isNil "DS_var_serverRunning") then {
                 DS_var_serverRunning = nil;

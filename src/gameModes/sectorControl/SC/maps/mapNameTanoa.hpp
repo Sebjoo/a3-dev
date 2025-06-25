@@ -1,9 +1,10 @@
 class MapName {
     title = "Map";
-    values[] = {0, 1};
+    values[] = {0, 1, 2};
     texts[] = {
         "Random",
-        "Georgetown (Large)"
+        "Georgetown (Large)",
+        "Tanouka (Large)"
     };
     default = 0;
 };

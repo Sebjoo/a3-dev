@@ -3,7 +3,7 @@ DM_fnc_guiLoop = {
     _dialog = uiNamespace getVariable "GUI";
 
     waitUntil {
-        _hp = ceil ((1 - (damage cameraOn)) * 100);
+        _hp = ceil ((1 - (damage focusOn)) * 100);
 
         (_dialog displayCtrl 1201) ctrlSetText ((str _hp) + " HP");
         (_dialog displayCtrl 1200) ctrlSetPosition [
@@ -123,7 +123,7 @@ DM_fnc_spectatorNightVisionLoop = {
 
         waitUntil {
             camUseNVG DM_var_nvGogglesEnabled;
-            cameraOn action [(["nvGogglesOff", "nvGoggles"] select DM_var_nvGogglesEnabled), cameraOn];
+            focusOn action [(["nvGogglesOff", "nvGoggles"] select DM_var_nvGogglesEnabled), focusOn];
 
             isNull (findDisplay 60492)
         };

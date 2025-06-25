@@ -38,7 +38,7 @@ class perkDialog {
         class RscText_1008: RscText
         {
             idc = 1008;
-            text = "Change Perks";
+            text = "Perks";
             x = 0.4175 * safezoneW + safezoneX;
             y = 0.379 * safezoneH + safezoneY;
             w = 0.0567187 * safezoneW;

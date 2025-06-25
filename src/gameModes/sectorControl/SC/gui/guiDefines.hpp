@@ -821,3 +821,5 @@ class RscMapControl {
         color[] = {0, 0, 0, 1};
     };
 };
+
+#define CT_CONTROLS_TABLE 19

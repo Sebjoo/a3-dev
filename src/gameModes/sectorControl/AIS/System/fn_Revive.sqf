@@ -63,6 +63,8 @@ private _duration = [_healer, _injured] call AIS_System_fnc_calculateReviveTime;
             _xp = [50, 100] select (_healer getVariable ["SC_var_hasExprPerk", false]);
             [_xp] remoteExecCall ["SC_fnc_addXp", _healer];
             [_healer, _injured, _xp] remoteExecCall ["SC_fnc_midfeedHeal", 2];
+            [_healer] remoteExecCall ["SC_fnc_addRevive", _healer];
+            [_injured] remoteExecCall ["SC_fnc_addRevived", _injured];
         };
         
         _healer removeEventHandler ["AnimChanged", ais_animChangeEVH];

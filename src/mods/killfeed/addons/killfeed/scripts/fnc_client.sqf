@@ -191,7 +191,7 @@ KF_fnc_AddMidfeedLine = {
 };
 
 KF_fnc_playerHasRespawned = {
-    (alive player) && {!(player getVariable ["AIS_unconscious", false])} && {cameraOn isEqualTo player}
+    (alive player) && {!(player getVariable ["AIS_unconscious", false])} && {focusOn isEqualTo player}
 };
 
 KF_fnc_addDeathFeed = {

@@ -14,62 +14,6 @@ class CfgFactionClasses {
 };
 
 class CfgVehicles {
-    class CAManBase {
-        class EventHandlers {
-            class KF_entityInit {
-                init = "if (isServer && {!(isNil 'KF_var_running')}) then {_this spawn KF_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class Car_F {
-        class EventHandlers {
-            class KF_entityInit {
-                init = "if (isServer && {!(isNil 'KF_var_running')}) then {_this spawn KF_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class Tank_F {
-        class EventHandlers {
-            class KF_entityInit {
-                init = "if (isServer && {!(isNil 'KF_var_running')}) then {_this spawn KF_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class StaticWeapon {
-        class EventHandlers {
-            class KF_entityInit {
-                init = "if (isServer && {!(isNil 'KF_var_running')}) then {_this spawn KF_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class Helicopter_Base_F {
-        class EventHandlers {
-            class KF_entityInit {
-                init = "if (isServer && {!(isNil 'KF_var_running')}) then {_this spawn KF_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class Plane_Base_F {
-        class EventHandlers {
-            class KF_entityInit {
-                init = "if (isServer && {!(isNil 'KF_var_running')}) then {_this spawn KF_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class Ship_F {
-        class EventHandlers {
-            class KF_entityInit {
-                init = "if (isServer && {!(isNil 'KF_var_running')}) then {_this spawn KF_fnc_entityInitServer;};";
-            };
-        };
-    };
-
     class Logic;
 
     class Module_F: Logic {
@@ -200,6 +144,25 @@ class CfgVehicles {
                 property = "moduleKillfeed_picturesBulletIcon";
                 displayName = "Show bullet icon";
                 tooltip = "toggles whether a bullet icon is displayed between the head and the weapon, in case of a headshot";
+                typeName = "NUMBER";
+                defaultValue = "1";
+                
+                class Values {
+                    class Enabled {
+                        name = "Enabled";
+                        value = 1;
+                    };
+                    class Disabled {
+                        name = "Disabled";
+                        value = 0;
+                    };
+                };
+            };
+
+            class showAiInNames: Combo {
+                property = "moduleKillfeed_showAiInNames";
+                displayName = "Show AI in names";
+                tooltip = "toggles whether ' (AI)' is appended to the names of AI units and vehicles";
                 typeName = "NUMBER";
                 defaultValue = "1";
                 

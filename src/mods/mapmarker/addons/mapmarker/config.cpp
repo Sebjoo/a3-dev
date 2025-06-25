@@ -14,62 +14,6 @@ class CfgFactionClasses {
 };
 
 class CfgVehicles {
-    class CAManBase {
-        class EventHandlers {
-            class MM_entityInit {
-                init = "if (isServer && {!(isNil 'MM_var_serverRunning') || {!(isNil 'MM_var_clientRunning')}}) then {_this spawn MM_fnc_entityInitServer;};";
-            };
-        };
-    };
-    
-    class Car_F {
-        class EventHandlers {
-            class MM_entityInit {
-                init = "if (isServer && {!(isNil 'MM_var_serverRunning') || {!(isNil 'MM_var_clientRunning')}}) then {_this spawn MM_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class Tank_F {
-        class EventHandlers {
-            class MM_entityInit {
-                init = "if (isServer && {!(isNil 'MM_var_serverRunning') || {!(isNil 'MM_var_clientRunning')}}) then {_this spawn MM_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class StaticWeapon {
-        class EventHandlers {
-            class MM_entityInit {
-                init = "if (isServer && {!(isNil 'MM_var_serverRunning') || {!(isNil 'MM_var_clientRunning')}}) then {_this spawn MM_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class Helicopter_Base_F {
-        class EventHandlers {
-            class MM_entityInit {
-                init = "if (isServer && {!(isNil 'MM_var_serverRunning') || {!(isNil 'MM_var_clientRunning')}}) then {_this spawn MM_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class Plane_Base_F {
-        class EventHandlers {
-            class MM_entityInit {
-                init = "if (isServer && {!(isNil 'MM_var_serverRunning') || {!(isNil 'MM_var_clientRunning')}}) then {_this spawn MM_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class Ship_F {
-        class EventHandlers {
-            class MM_entityInit {
-                init = "if (isServer && {!(isNil 'MM_var_serverRunning') || {!(isNil 'MM_var_clientRunning')}}) then {_this spawn MM_fnc_entityInitServer;};";
-            };
-        };
-    };
-
     class Logic;
 
     class Module_F: Logic {

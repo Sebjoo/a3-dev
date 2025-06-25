@@ -11,6 +11,7 @@ if isServer then {
     KF_var_MultipleDeathCauses = (_logic getVariable "multipleDeathCauses") == 1;
     KF_var_PicturesHeadIcon = (_logic getVariable "picturesHeadIcon") == 1;
     KF_var_picturesBulletIcon = (_logic getVariable "picturesBulletIcon") == 1;
+    KF_var_showAiInNames = (_logic getVariable "showAiInNames") == 1;
 
     KF_var_KillfeedEnabled = (_logic getVariable "killfeedEnabled") == 1;
     KF_var_KillfeedInversed = (_logic getVariable "killfeedInversed") == 1;

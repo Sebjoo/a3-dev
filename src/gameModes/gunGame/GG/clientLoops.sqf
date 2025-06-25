@@ -74,7 +74,7 @@ GG_fnc_spectatorNightVisionLoop = {
 
         waitUntil {
             camUseNVG GG_var_nvGogglesEnabled;
-            cameraOn action [(["nvGogglesOff", "nvGoggles"] select GG_var_nvGogglesEnabled), cameraOn];
+            focusOn action [(["nvGogglesOff", "nvGoggles"] select GG_var_nvGogglesEnabled), focusOn];
 
             isNull (findDisplay 60492)
         };

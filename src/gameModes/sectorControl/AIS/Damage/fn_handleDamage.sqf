@@ -23,7 +23,8 @@ params [
     "_projectile",        // Classname of the projectile that caused inflicted the damage. ("" for unknown, such as falling damage.) (String)
     "_hitPartIndex",    // Hit part index of the hit point, -1 otherwise.
     "_instigator",        // Person who pulled the trigger. (Object)
-    "_hitPoint"            // hit point Cfg name (String)
+    "_hitPoint",            // hit point Cfg name (String)
+    "_directHit"
 ];
 
 if !(local _unit) exitWith {false};
@@ -65,6 +66,11 @@ if (_unit getVariable ["ais_unconscious", false]) exitWith {
 };
 
 _new_damage = AIS_DAMAGE_TOLLERANCE_FACTOR * _new_damage;
+
+if (!(isNull (objectParent _unit)) && {(_directHit && {_projectile == ""}) || {SC_var_launcherAmmos getOrDefault [_projectile, false]}}) then {
+    _new_damage = _new_damage * 0.5 * SC_var_vehicleDamageFactor;
+};
+
 _damage = (_hitPart select 2) + _new_damage;
 
 if (_hitPartIndex >= 0) then {

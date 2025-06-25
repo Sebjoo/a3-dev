@@ -14,62 +14,6 @@ class CfgFactionClasses {
 };
 
 class CfgVehicles {
-    class CAManBase {
-        class EventHandlers {
-            class TDI_entityInit {
-                init = "if (isServer && {!(isNil 'TDI_var_serverRunning') || {!(isNil 'TDI_var_clientRunning')}}) then {_this spawn TDI_fnc_entityInitServer;};";
-            };
-        };
-    };
-    
-    class Car_F {
-        class EventHandlers {
-            class TDI_entityInit {
-                init = "if (isServer && {!(isNil 'TDI_var_serverRunning') || {!(isNil 'TDI_var_clientRunning')}}) then {_this spawn TDI_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class Tank_F {
-        class EventHandlers {
-            class TDI_entityInit {
-                init = "if (isServer && {!(isNil 'TDI_var_serverRunning') || {!(isNil 'TDI_var_clientRunning')}}) then {_this spawn TDI_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class StaticWeapon {
-        class EventHandlers {
-            class TDI_entityInit {
-                init = "if (isServer && {!(isNil 'TDI_var_serverRunning') || {!(isNil 'TDI_var_clientRunning')}}) then {_this spawn TDI_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class Helicopter_Base_F {
-        class EventHandlers {
-            class TDI_entityInit {
-                init = "if (isServer && {!(isNil 'TDI_var_serverRunning') || {!(isNil 'TDI_var_clientRunning')}}) then {_this spawn TDI_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class Plane_Base_F {
-        class EventHandlers {
-            class TDI_entityInit {
-                init = "if (isServer && {!(isNil 'TDI_var_serverRunning') || {!(isNil 'TDI_var_clientRunning')}}) then {_this spawn TDI_fnc_entityInitServer;};";
-            };
-        };
-    };
-
-    class Ship_F {
-        class EventHandlers {
-            class TDI_entityInit {
-                init = "if (isServer && {!(isNil 'TDI_var_serverRunning') || {!(isNil 'TDI_var_clientRunning')}}) then {_this spawn TDI_fnc_entityInitServer;};";
-            };
-        };
-    };
-
     class Logic;
 
     class Module_F: Logic {

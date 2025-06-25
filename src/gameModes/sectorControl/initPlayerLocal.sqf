@@ -108,6 +108,10 @@ waitUntil {!(isNil "SC_var_serverInitDone")};
         player setUnitTrait ["Engineer", true];
         player setUnitTrait ["UAVHacker", true];
 
+        {
+            [_x] call SC_fnc_addHandleHeal;
+        } forEach (entities [["CAManBase"], [], true, false]);
+
         player addEventHandler ["killed", {_this spawn SC_fnc_onKilled;}];
         player addEventHandler ["Respawn", {_this spawn SC_fnc_onRespawn;}];
         player addEventHandler ["Put", {_this call SC_fnc_put;}];
@@ -146,6 +150,7 @@ waitUntil {!(isNil "SC_var_serverInitDone")};
         SC_var_cameraNightVisionLoopScript = [] spawn SC_fnc_cameraNightVisionLoop;
         SC_var_staminaSystemLoopScript = [] spawn SC_fnc_staminaSystemLoop;
         SC_var_disableLeftGpsLoopScript = [] spawn SC_fnc_disableLeftGpsLoop;
+        SC_var_broadcastCameraViewLoopScript = [] spawn SC_var_broadcastCameraViewLoop;
 
         [] spawn {
             waitUntil {

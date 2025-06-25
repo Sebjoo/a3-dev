@@ -113,13 +113,42 @@ MM_fnc_getTeamMapColor = {
     }
 };
 
+MM_fnc_UAVControl = {
+    params ["_unit", "_mode", ["_altMode", ""]];
+    _ret = objNull;
+
+    _UAVControl = UAVControl _unit;
+    _UAVControls = [_UAVControl select [0, 2]];
+
+    if ((count _UAVControl) == 4) then {
+        _UAVControls pushBack (_UAVControl select [2, 2]);
+    };
+
+    _pos = (_UAVControls apply {_x select 1}) find _mode;
+
+    if (_pos != -1) then {
+        _ret = (_UAVControls select _pos) select 0;
+    } else {
+        if (_altMode != "") then {
+            _pos = (_UAVControls apply {_x select 1}) find _altMode;
+
+            if (_pos != -1) then {
+                _ret = (_UAVControls select _pos) select 0;
+            };
+        };
+    };
+
+    _ret
+};
+
 MM_fnc_updateDrawArray = {
     params ["_sleep"];
 
-    _isInSpectator = (!(isNil "BIS_EGSpectator_initialized") || {!(isNil "SPECTATE_THREAD")});
-    _group = group player;
-    _groupUnits = [player] call MM_fnc_getGroupUnits;
-    _side = player getVariable ["MM_var_side", sideUnknown];
+    _unit = if !(unitIsUAV focusOn) then {focusOn} else {[(objectParent focusOn), "DRIVER", "GUNNER"] call MM_fnc_UAVControl};
+    _isInSpectator = !(_unit isEqualTo player);
+    _group = group _unit;
+    _groupUnits = [_unit] call MM_fnc_getGroupUnits;
+    _side = _unit getVariable ["MM_var_side", sideUnknown];
     _objectViewDistance = if isServer then {-1} else {getObjectViewDistance select 0};
     _camPos = if isServer then {[]} else {positionCameraToWorld [0, 0, 0]};
 
@@ -131,7 +160,7 @@ MM_fnc_updateDrawArray = {
                 {!MM_var_gpsOpened || {[(uiNamespace getVariable "MM_var_currentDisplay"), (getPosWorldVisual _x)] call MM_fnc_isPosVisibleOnGPS}} &&
                 {
                     MM_var_showAliveGroupUnits ||
-                    {_x isEqualTo player} ||
+                    {_x isEqualTo _unit} ||
                     {!(_x in _groupUnits)} ||
                     {!(alive _x)} ||
                     {_x getVariable ["AIS_unconscious", false]}
@@ -148,7 +177,7 @@ MM_fnc_updateDrawArray = {
 
                         if (alive _x) then {
                             _color = if (_x in _groupUnits) then {
-                                if (_x isEqualTo player) then {MM_var_colorYellow} else {MM_var_colorWhite}
+                                if (_x isEqualTo _unit) then {MM_var_colorYellow} else {MM_var_colorWhite}
                             } else {
                                 _x getVariable ["MM_var_color", MM_var_colorDefault]
                             };
@@ -175,7 +204,7 @@ MM_fnc_updateDrawArray = {
                             };
                         } else {
                             _size = 30;
-                            _color = if (_x isEqualTo player) then {MM_var_colorYellow} else {_x getVariable ["MM_var_color", MM_var_colorDefault]};
+                            _color = if (_x isEqualTo _unit) then {MM_var_colorYellow} else {_x getVariable ["MM_var_color", MM_var_colorDefault]};
                             _icon = "iconExplosiveGP";
                         };
 
@@ -194,7 +223,7 @@ MM_fnc_updateDrawArray = {
                         MM_var_preDrawArray pushBack [
                             _x, _xIsWithinObjViewDistance, 0, false, "iconParachute",
                             (if (_driver in _groupUnits) then {
-                                if (_driver isEqualTo player) then {MM_var_colorYellow} else {MM_var_colorWhite}
+                                if (_driver isEqualTo _unit) then {MM_var_colorYellow} else {MM_var_colorWhite}
                             } else {
                                 _x getVariable ["MM_var_color", MM_var_colorDefault]
                             }),
@@ -232,7 +261,7 @@ MM_fnc_updateDrawArray = {
                                     (_crew select 0) getVariable ["MM_var_color", MM_var_colorDefault]
                                 }
                             } else {
-                                if (player in _groupUnitsInCrew) then {MM_var_colorYellow} else {MM_var_colorWhite}
+                                if (_unit in _groupUnitsInCrew) then {MM_var_colorYellow} else {MM_var_colorWhite}
                             };
 
                             _size = _parX getVariable ["MM_var_iconSize", 0];

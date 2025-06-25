@@ -22,6 +22,5 @@ copy "%basePath%\cfg\keys\%keyName%.bikey" "%modpath%" /y
     -clear
 
 rmdir "%modpath%\addons\%mod%" /q /s
-"%basePath%\scripts\rclone.exe" copy "%modpath%" gdrive:a3-dev\build\mods
 
 exit

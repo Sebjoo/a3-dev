@@ -25,6 +25,7 @@ KF_fnc_SetDefaultSettings = {
     KF_var_MultipleDeathCauses = false;
     KF_var_PicturesHeadIcon = true;
     KF_var_picturesBulletIcon = true;
+    KF_var_showAiInNames = true;
     KF_var_MidFeedEnabled = true;
     KF_var_MidfeedCooldown = 10;
     KF_var_MidfeedMaximumLength = 10;
@@ -106,7 +107,7 @@ KF_fnc_getName = {
     _name = "";
 
     if (unitIsUAV _unit) then {
-        _name = [([typeOf _unit] call KF_fnc_GetDisplayName), "(AI)"] joinString " ";
+        _name = [([typeOf _unit] call KF_fnc_GetDisplayName), ["", "(AI)"] select KF_var_showAiInNames] joinString " ";
     } else {
         _name = name _unit;
 
@@ -123,7 +124,9 @@ KF_fnc_getName = {
                 };
             };
             
-            _name = _name + " (AI)";
+            if KF_var_showAiInNames then {
+                _name = _name + " (AI)";
+            };
         };
     };
 
@@ -186,31 +189,11 @@ KF_fnc_UAVControlUnits = {
 KF_fnc_mpHit = {
     params ["_unit", "_causedBy", "", "_instigator"];
 
-    if ((isDamageAllowed _unit) && {isNull _instigator} && {!(isNull _causedBy)}) then {
-        _parCB = objectParent _causedBy;
-        _parUN = objectParent _unit;
-
+    if ((isDamageAllowed _unit) && {!(isNull _causedBy)}) then {
         _magazine = "";
+        _ammo = "";
         _distance = if (_unit isEqualTo _causedBy) then {-1} else {_unit distance _causedBy};
         _selections = [];
-
-        _ammo = if !(isNull _parCB) then {
-            if ((alive _parCB) && {!(unitIsUAV _unit)} && {(isNull _parUN) || {!(_parCB isEqualTo _parUN)}}) then {
-                if (_distance > 4) then {
-                    "expl"
-                } else {
-                    "vehHit"
-                }
-            } else {
-                "vehExpl"
-            }
-        } else {
-            if ((_unit isEqualTo _causedBy) && {_unit isKindOf "CAManBase"}) then {
-                "fall"
-            } else {
-                "expl"
-            }
-        };
 
         if (unitIsUAV _causedBy) then {
             _uavCtrlCB = [_causedBy, "DRIVER", "GUNNER"] call KF_fnc_UAVControl;
@@ -219,25 +202,49 @@ KF_fnc_mpHit = {
                 _instigator = _causedBy;
             } else {
                 _instigator = _uavCtrlCB;
+                _ammo = "vehHit";
             };
-        } else {
-            if (unitIsUAV _parCB) then {
-                _uavCtrlParCB = [_parCB, "DRIVER", "GUNNER"] call KF_fnc_UAVControl;
+        };
 
-                if ((isNull _uavCtrlParCB) || {_unit isEqualTo _parCB}) then {
-                    _instigator = _parCB;
+        if ((isNull _instigator) && {_causedBy isKindOf "CAManBase"}) then {
+            _instigator = _causedBy;
+        };
+
+        _parUN = objectParent _unit;
+        _parIN = objectParent _instigator;
+
+        if (_ammo == "") then {
+            _ammo = if !(isNull _parIN) then {
+                if ((alive _parIN) && {!(unitIsUAV _unit)} && {(isNull _parUN) || {!(_parIN isEqualTo _parUN)}}) then {
+                    if (_distance > 4) then {
+                        "expl"
+                    } else {
+                        "vehHit"
+                    }
                 } else {
-                    _instigator = _uavCtrlParCB;
-                };
+                    "vehExpl"
+                }
             } else {
-                _instigator = _causedBy;
-            }
+                if ((_unit isEqualTo _causedBy) && {_unit isKindOf "CAManBase"}) then {
+                    "fall"
+                } else {
+                    ""
+                }
+            };
+        };
+
+        if (_ammo == "") exitWith {};
+
+        if (_unit isEqualTo _causedBy) then {
+            _selections pushBack ["", true];
+        } else {
+            _selections pushBack [_causedBy selectionPosition "head", true];
         };
 
         _source = switch _ammo do {
             case "expl": {"Explosion"};
             case "fall": {"Fall Damage"};
-            default {typeOf _parCB};
+            default {typeOf _causedBy};
         };
 
         [_unit, _instigator, _ammo, _magazine, _selections, _distance, _source] call KF_fnc_OnHit;
@@ -777,7 +784,7 @@ KF_fnc_OnKill = {
                             ]} else {""}),
                             (if (_counterHitsText != "") then {_counterHitsText} else {""}),
                             (if (_assistsText != "") then {["<br/><br/><t underline='true'>Assistants:</t><br/>", _assistsText] joinString ""} else {""}),
-                            ((KF_var_AddDeathFeedInfo apply {[_deathFeedUnit, _killer, _killIsTk, _killDistance, _hitData, _counterDistance, _counterTypeSourceSelArr] call _x}) joinString ""),
+                            ((KF_var_AddDeathFeedInfo apply {[_deathFeedUnit, _killer, _killIsTk, _killDistance, _hitDataCopy, _counterDistance, _counterTypeSourceSelArr, _externalUnitDeathCall] call _x}) joinString ""),
                             (if (isNil "SC_var_serverInitDone") then {""} else {"[" + (str (_killer getVariable ["SC_var_rank", 1])) + "] "})
                         ]
                     ],
@@ -907,31 +914,14 @@ KF_fnc_EntityKilled = {
             _unit setVariable ["KF_var_parUAVControlUnits", ([_unit, true] call KF_fnc_UAVControlUnits)];
         };
         
-        if ((unitIsUAV _killer) && {_instigator isKindOf "CAManBase"}) then {
-            if ([_instigator] call KF_fnc_isUavAi) then {
-                _uavCtrlParInstigator = [_parInstigator, "GUNNER", "DRIVER"] call KF_fnc_UAVControl;
+        if (unitIsUAV _killer) then {
+            _uavCtrlKiller = [_killer, "DRIVER", "GUNNER"] call KF_fnc_UAVControl;
 
-                if (isNull _uavCtrlParInstigator) then {
-                    _instigator = _parInstigator;
-                    _killer = _parInstigator;
-                } else {
-                    _instigator = _uavCtrlParInstigator;
-                    _killer = _uavCtrlParInstigator;
-                };
+            if ((isNull _uavCtrlKiller) || {_unit isEqualTo _killer}) then {
+                _instigator = _killer;
             } else {
-                _killer = _instigator;
-            };
-        };
-
-        if ((isNull _instigator) && {[_killer] call KF_fnc_isUavAi}) then {
-            _uavCtrlParKiller = [_parKiller, "DRIVER", "GUNNER"] call KF_fnc_UAVControl;
-
-            if ((isNull _uavCtrlParKiller) || {_unit isEqualTo _parKiller}) then {
-                _instigator = _parKiller;
-                _killer = _parKiller;
-            } else {
-                _instigator = _uavCtrlParKiller;
-                _killer = _uavCtrlParKiller;
+                _instigator = _uavCtrlKiller;
+                _killer = _uavCtrlKiller;
             };
         };
 
@@ -1050,6 +1040,14 @@ KF_fnc_startKillfeed = {
         {
             [_x] spawn KF_fnc_EntityInitServer;
         } forEach (entities [["AllVehicles"], ["Animal"], true, false]);
+
+        addMissionEventHandler ["EntityCreated", {
+            params ["_entity"];
+
+            if ((_entity isKindOf "AllVehicles") && {!(_entity isKindOf "Animal")}) then {
+                [_entity] spawn KF_fnc_EntityInitServer;
+            };
+        }];
 
         addMissionEventHandler ["EntityRespawned", {
             _this call KF_fnc_EntityRespawned;

@@ -52,7 +52,7 @@ SC_fnc_updateTDIconsDrawArray = {
     } forEach ([
         [([_sideStr, "inf"] joinString ""), "Information", "\A3\ui_f\data\Map\MapControl\powersolar_CA.paa"],
         [([_sideStr, "tp"] joinString ""), "Teleport", "\A3\ui_f\data\IGUI\Cfg\Actions\unloadVehicle_ca.paa"],
-        [([_sideStr, "cs"] joinString ""), "Change Perks", "\A3\ui_f\data\IGUI\Cfg\Actions\reammo_ca.paa"],
+        [([_sideStr, "cs"] joinString ""), "Perks", "\A3\ui_f\data\IGUI\Cfg\Actions\reammo_ca.paa"],
         [([_sideStr, "equip"] joinString ""), "Loadout", "\A3\ui_f\data\IGUI\Cfg\Actions\gear_ca.paa"],
         [([_sideStr, "veh"] joinString ""), "Vehicles", "\A3\ui_f\data\Map\Markers\NATO\c_car.paa"]
     ] + (

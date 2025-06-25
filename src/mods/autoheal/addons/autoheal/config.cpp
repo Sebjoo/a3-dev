@@ -14,14 +14,6 @@ class CfgFactionClasses {
 };
 
 class CfgVehicles {
-    class CAManBase {
-        class EventHandlers {
-            class AH_entityInit {
-                init = "if (isServer && {!(isNil 'AH_var_serverRunning') || {!(isNil 'AH_var_clientRunning')}}) then {_this spawn AH_fnc_entityInitServer;};";
-            };
-        };
-    };
-
     class Logic;
 
     class Module_F: Logic {

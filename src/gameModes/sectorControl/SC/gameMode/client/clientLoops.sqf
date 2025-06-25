@@ -147,10 +147,7 @@ SC_fnc_respawnPositionsLoop = {
 
                 if ((alive _unit) && {!(_unit getVariable ["ais_unconscious", false])} && {simulationEnabled _unit} && {!(_unit in (SC_var_groupResArr apply {_x select 0}))}) then {
                     ([player, _unit, (_unit getVariable "SC_var_name")] call BIS_fnc_addRespawnPosition) params ["", "_resID"];
-                    _aId = SC_var_tp addAction [
-                        ("<img size='1.5' color='#ffffff' shadow='2' image='\A3\Ui_f\data\GUI\Rsc\RscDisplayMain\menu_singleplayer_ca.paa'/>" + (_unit getVariable "SC_var_name")),
-                    {[player, (_this select 3)] spawn SC_fnc_groupSpawn;}, _unit, 1.5, true, false, "", "", 3];
-                    SC_var_groupResArr pushBack [_unit, _resId, _aId];
+                    SC_var_groupResArr pushBack [_unit, _resId];
                 };
             } forEach (([player] call SC_fnc_getGroupUnits) - [player]);
         };
@@ -161,11 +158,10 @@ SC_fnc_respawnPositionsLoop = {
             _groupUnits = [player] call SC_fnc_getGroupUnits;
 
             {
-                _x params ["_unit", "_resId", "_aId"];
+                _x params ["_unit", "_resId"];
                 
                 if (!(alive _unit) || {_unit getVariable ["ais_unconscious", false]} || {!(simulationEnabled _unit)} || {!(_unit in _groupUnits)}) then {
                     [player, _resId] call BIS_fnc_removeRespawnPosition;
-                    SC_var_tp removeAction _aId;
                 };
             } forEach SC_var_groupResArr;
 
@@ -211,7 +207,7 @@ SC_fnc_spectatorNightVisionLoop = {
 
         waitUntil {
             camUseNVG SC_var_nvGogglesEnabled;
-            cameraOn action [(["nvGogglesOff", "nvGoggles"] select SC_var_nvGogglesEnabled), cameraOn];
+            focusOn action [(["nvGogglesOff", "nvGoggles"] select SC_var_nvGogglesEnabled), focusOn];
 
             isNull (findDisplay 60492)
         };
@@ -236,7 +232,7 @@ SC_fnc_cameraNightVisionLoop = {
 
         waitUntil {
             camUseNVG SC_var_nvGogglesEnabled;
-            cameraOn action [(["nvGogglesOff", "nvGoggles"] select SC_var_nvGogglesEnabled), cameraOn];
+            focusOn action [(["nvGogglesOff", "nvGoggles"] select SC_var_nvGogglesEnabled), focusOn];
 
             {
                 false setCamUseTI _x;
@@ -246,6 +242,18 @@ SC_fnc_cameraNightVisionLoop = {
         };
         player action [(["nvGogglesOff", "nvGoggles"] select SC_var_nvGogglesEnabled), player];
 
+        false
+    };
+};
+
+SC_var_broadcastCameraViewLoop = {
+    waitUntil {
+        if (alive player) then {
+            player setVariable ["SC_var_cameraView", cameraView, true];
+        };
+
+        sleep 0.3;
+        
         false
     };
 };
