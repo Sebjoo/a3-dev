@@ -1,6 +1,5 @@
 MM_var_clientRunning = nil;
 
-MM_var_entityRespawnedEhId = -1;
 MM_var_drawEhIds = [];
 MM_var_uavTerminalLoopScript = scriptNull;
 MM_var_cameraMapDrawEHLoopScript = scriptNull;
@@ -475,14 +474,15 @@ MM_fnc_entityInitClient = {
     if (_entity isKindOf "CAManBase") then {
         _id = _entity getVariable ["MM_var_deletedEhId", -1];
         if (_id != -1) then {_entity removeEventHandler ["Deleted", _id];};
+
         _id = _entity addEventHandler ["Deleted", {
             params ["_entity"];
 
             _sideStr = [_entity getVariable ["MM_var_side", sideUnknown]] call MM_fnc_getSideString;
             _entity call (compile (["MM_var_units", _sideStr, " deleteAt (MM_var_units", _sideStr," find _this);"] joinString ""));
         }];
-        _entity setVariable ["MM_var_deletedEhId", _id];
 
+        _entity setVariable ["MM_var_deletedEhId", _id];
         _varStr = ["MM_var_units", ([side (group _entity)] call MM_fnc_getSideString)] joinString "";
         
         if ((random 1) < 0.01) then {
@@ -522,7 +522,6 @@ MM_fnc_startMapMarkerClient = {
                 } forEach (entities [["CAManBase"], [""], true, false]);
                 
                 uiNamespace setVariable ["MM_var_gpsDisplays", (call MM_fnc_getGPSDisplays)];
-                MM_var_entityRespawnedEhId = addMissionEventHandler ["EntityRespawned", {params ["_newEntity"]; [_newEntity] call MM_fnc_entityInitClient;}];
 
                 {
                     MM_var_drawEhIds pushBack (_x ctrlAddEventHandler ["Draw", {_this call MM_fnc_drawIcons;}]);
@@ -587,9 +586,6 @@ MM_fnc_stopMapMarkerClient = {
             {
                 _x ctrlRemoveEventHandler ["Draw", (MM_var_drawEhIds select _forEachIndex)];
             } forEach ([(findDisplay 12) displayCtrl 51] + (uiNamespace getVariable "MM_var_gpsDisplays"));
-
-            removeMissionEventHandler ["EntityRespawned", MM_var_entityRespawnedEhId];
-            MM_var_entityRespawnedEhId = -1;
 
             uiNamespace setVariable ["MM_var_gpsDisplays", []];
             

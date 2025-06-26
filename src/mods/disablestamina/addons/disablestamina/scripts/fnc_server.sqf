@@ -15,11 +15,7 @@ DS_fnc_entityInitServer = {
     waitUntil {(isNil "_entity") || {!(isNull _entity)} || {(time - _startTime) > 3}};
     if ((isNil "_entity") || {isNull _entity}) exitWith {};
 
-    _this call {
-        params ["_entity"];
-
-        [_entity] call DS_fnc_disableStamina;
-    };
+    [_entity] call DS_fnc_disableStamina;
 };
 
 DS_fnc_enableStaminaForAiUnits = {

@@ -19,20 +19,6 @@ AH_fnc_setDamageServer = {
     };
 };
 
-AH_fnc_entityInitServer = {
-    params ["_unit"];
-
-    _startTime = time;
-    waitUntil {(!(isNil "_unit") && {!(isNull _unit)}) || {(time - _startTime) > 3}};
-    if ((isNil "_unit") || {isNull _unit}) exitWith {};
-
-    _this call {
-        params ["_unit"];
-
-        [[_unit], {if !(isNil "AH_var_clientServerInitDone") then {_this call AH_fnc_entityInitClientServer};}] remoteExecCall ["call", 0];
-    };
-};
-
 AH_fnc_startAutoHealServer = {
     call {
         if !isMultiplayer then {

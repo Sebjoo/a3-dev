@@ -102,21 +102,20 @@ TDI_fnc_entityInitServer = {
     _this call {
         params ["_entity"];
 
-        if (isNil {_entity getVariable "TDI_var_initDone"}) then {
+        if (isNil {_entity getVariable "TDI_var_initDone"} && {(name _entity) != ""}) then {
             _entity setVariable ["TDI_var_initDone", true];
 
             if (_entity isKindOf "CAManBase") then {
                 if (isNil {_entity getVariable "TDI_var_name"}) then {
                     _entity setVariable ["TDI_var_name", ([_entity] call TDI_fnc_getName), true];
                 };
-
-                _entity setVariable ["TDI_var_side", (side (group _entity)), true];
             } else {
                 _entity setVariable ["TDI_var_name", (getText (configfile >> "CfgVehicles" >> (typeOf _entity) >> "displayName")), true];
             };
-        };
 
-        [[_entity], {if !(isNil "TDI_var_clientInitDone") then {_this call TDI_fnc_entityInitClient};}] remoteExecCall ["call", 0];
+            _entity setVariable ["TDI_var_side", (side (group _entity)), true];
+            [[_entity], {if !(isNil "TDI_var_clientInitDone") then {_this call TDI_fnc_entityInitClient};}] remoteExecCall ["call", 0];
+        }
     };
 };
 

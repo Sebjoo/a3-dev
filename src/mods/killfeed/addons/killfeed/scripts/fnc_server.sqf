@@ -962,29 +962,33 @@ KF_fnc_EntityInitServer = {
     [_entity] call {
         params ["_entity"];
 
-        if ((_entity isKindOf "CAManBase") || {unitIsUAV _entity}) then {
-            [_entity] call KF_fnc_addHandleScore;
+        if (isNil {_entity getVariable "KF_var_initDone"} && {(name _entity) != ""}) then {
+            _entity setVariable ["KF_var_initDone", true];
 
-            {_entity setVariable _x;} forEach [
-                ["KF_var_name", ([_entity] call KF_fnc_getName), true],
-                ["KF_var_side", (side (group _entity))],
-                ["KF_var_killsInARow", 0],
-                ["KF_var_calledKilled", false],
-                ["KF_var_initTime", time]
-            ];
+            if ((_entity isKindOf "CAManBase") || {unitIsUAV _entity}) then {
+                [_entity] call KF_fnc_addHandleScore;
+
+                {_entity setVariable _x;} forEach [
+                    ["KF_var_name", ([_entity] call KF_fnc_getName), true],
+                    ["KF_var_side", (side (group _entity))],
+                    ["KF_var_killsInARow", 0],
+                    ["KF_var_calledKilled", false],
+                    ["KF_var_initTime", time]
+                ];
+            };
+
+            _entity setVariable ["KF_var_hits", []];
+
+            _id = _entity getVariable ["KF_var_mpHitEhId", -1];
+            if (_id != -1) then {_entity removeMPEventHandler ["MPHit", _id];};
+            _id = _entity addMPEventHandler ["MPHit", {if isServer then {_this call KF_fnc_mpHit;};}];
+            _entity setVariable ["KF_var_mpHitEhId", _id];
+
+            [[_entity], {
+                waitUntil {!(isNil "KF_var_clientServerInitDone")};
+                _this call KF_fnc_EntityInitClientServer;
+            }] remoteExecCall ["spawn", 0];
         };
-
-        _entity setVariable ["KF_var_hits", []];
-
-        _id = _entity getVariable ["KF_var_mpHitEhId", -1];
-        if (_id != -1) then {_entity removeMPEventHandler ["MPHit", _id];};
-        _id = _entity addMPEventHandler ["MPHit", {if isServer then {_this call KF_fnc_mpHit;};}];
-        _entity setVariable ["KF_var_mpHitEhId", _id];
-
-        [[_entity], {
-            waitUntil {!(isNil "KF_var_clientServerInitDone")};
-            _this call KF_fnc_EntityInitClientServer;
-        }] remoteExecCall ["spawn", 0];
     };
 };
 

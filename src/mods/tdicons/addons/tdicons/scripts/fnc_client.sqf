@@ -4,7 +4,6 @@ TDI_var_colorYellow = [1, 1, 0, 1];
 TDI_var_colorWhite = [1, 1, 1, 1];
 TDI_var_colorBlack = [0, 0, 0, 1];
 
-TDI_var_entityRespawnedEhId = -1;
 TDI_var_draw3dEhId = -1;
 TDI_var_updateDrawArrayLoopScript = scriptNull;
 TDI_var_gatherDrawArraysFncs = [];
@@ -409,25 +408,24 @@ TDI_fnc_updateDrawArrayLoop = {
 TDI_fnc_entityInitClient = {
     params ["_entity"];
 
-    if (_entity isKindOf "CAManBase") then {
-        _id = _entity getVariable ["TDI_var_deletedEhId", -1];
-        if (_id != -1) then {_entity removeEventHandler ["Deleted", _id];};
-        _id = _entity addEventHandler ["Deleted", {
-            params ["_entity"];
+    _id = _entity getVariable ["TDI_var_deletedEhId", -1];
+    if (_id != -1) then {_entity removeEventHandler ["Deleted", _id];};
 
-            _sideStr = [_entity getVariable ["TDI_var_side", sideUnknown]] call TDI_fnc_getSideString;
-            _entity call (compile (["TDI_var_units", _sideStr, " deleteAt (TDI_var_units", _sideStr," find _this);"] joinString ""));
-        }];
-        _entity setVariable ["TDI_var_deletedEhId", _id];
+    _id = _entity addEventHandler ["Deleted", {
+        params ["_entity"];
 
-        _varStr = ["TDI_var_units", ([side (group _entity)] call TDI_fnc_getSideString)] joinString "";
-        
-        if ((random 1) < 0.01) then {
-            call (compile ([_varStr, " = ", _varStr, " - [objNull];"] joinString ""));
-        };
+        _sideStr = [_entity getVariable ["TDI_var_side", sideUnknown]] call TDI_fnc_getSideString;
+        _entity call (compile (["TDI_var_units", _sideStr, " deleteAt (TDI_var_units", _sideStr," find _this);"] joinString ""));
+    }];
 
-        _entity call (compile ([_varStr, " pushBackUnique _this;"] joinString ""));
+    _entity setVariable ["TDI_var_deletedEhId", _id];
+    _varStr = ["TDI_var_units", ([side (group _entity)] call TDI_fnc_getSideString)] joinString "";
+    
+    if ((random 1) < 0.01) then {
+        call (compile ([_varStr, " = ", _varStr, " - [objNull];"] joinString ""));
     };
+
+    _entity call (compile ([_varStr, " pushBackUnique _this;"] joinString ""));
 };
 
 TDI_fnc_drawIcons = {
@@ -471,9 +469,7 @@ TDI_fnc_startTdIconsClient = {
                 [_x] call TDI_fnc_entityInitClient;
             } forEach (entities [["CAManBase"], [""], true, false]);
 
-            TDI_var_entityRespawnedEhId = addMissionEventHandler ["EntityRespawned", {params ["_entity"]; [_entity] call TDI_fnc_entityInitClient;}];
             TDI_var_draw3dEhId = addMissionEventHandler ["Draw3D", TDI_fnc_drawIcons];
-
             TDI_var_updateDrawArrayLoopScript = [] spawn TDI_fnc_updateDrawArrayLoop;
         };
     };
@@ -488,13 +484,9 @@ TDI_fnc_stopTdIconsClient = {
                 missionNamespace setVariable [("TDI_var_units" + (str _x)), []];
             } forEach [west, east, independent, civilian, sideEmpty, sideLogic, sideAmbientLife, sideUnknown];
 
-            removeMissionEventHandler ["EntityRespawned", TDI_var_entityRespawnedEhId];
             removeMissionEventHandler ["Draw3D", TDI_var_draw3dEhId];
-
             terminate TDI_var_updateDrawArrayLoopScript;
             TDI_var_updateDrawArrayLoopScript = scriptNull;
-
-            TDI_var_entityRespawnedEhId = -1;
             TDI_var_draw3dEhId = -1;
         };
     };

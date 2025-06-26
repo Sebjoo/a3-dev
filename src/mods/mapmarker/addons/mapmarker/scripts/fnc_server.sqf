@@ -132,7 +132,7 @@ MM_fnc_entityInitServer = {
     _this call {
         params ["_entity"];
 
-        if (isNil {_entity getVariable "MM_var_initDone"}) then {
+        if (isNil {_entity getVariable "MM_var_initDone"} && {(name _entity) != ""}) then {
             _entity setVariable ["MM_var_initDone", true];
 
             if (_entity isKindOf "CAManBase") then {

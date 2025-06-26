@@ -266,8 +266,6 @@ DM_fnc_spawnVehicle = {
 
         _veh = createVehicle [_vehType, _safePos, [], 0, "NONE"];
         [_veh, false] call ADG_fnc_allowDamage;
-        [_veh] spawn KF_fnc_entityInitServer;
-        [_veh] spawn MM_fnc_entityInitServer;
 
         _veh
     };
